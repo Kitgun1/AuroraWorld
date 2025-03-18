@@ -1,4 +1,4 @@
-using System.Threading.Tasks;
+using AuroraWorld.StorageGame;
 using DI;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -11,6 +11,7 @@ namespace AuroraWorld
         private static void Init()
         {
             var projectContainer = new DIContainer();
+            projectContainer.RegisterSingleton(_ => new Storage());
 
             var operation = SceneManager.LoadSceneAsync(0);
             operation!.completed += _ =>
