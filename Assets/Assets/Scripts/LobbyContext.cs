@@ -5,10 +5,11 @@ namespace AuroraWorld
 {
     public class LobbyContext : MonoBehaviour
     {
+        private DIContainer _lobbyContainer;
+
         public void Init(DIContainer projectContainer)
         {
-            var lobbyContainer = new DIContainer(projectContainer);
-            
+            _lobbyContainer = new DIContainer(projectContainer);
         }
     }
 }
