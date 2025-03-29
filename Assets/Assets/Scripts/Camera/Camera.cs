@@ -41,6 +41,10 @@ namespace AuroraWorld
             var camera = new GameObject("Camera").AddComponent<UnityEngine.Camera>();
             camera.transform.parent = parent.transform;
             camera.cullingMask = _config.CullingMask;
+            camera.orthographic = _config.Orthographic;
+            camera.farClipPlane = _config.FarClipPlane;
+            camera.nearClipPlane = _config.NearClipPlane;
+            camera.clearFlags = _config.ClearFlags;
             return camera;
         }
     }
