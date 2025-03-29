@@ -1,5 +1,3 @@
-using System.IO;
-
 namespace AuroraWorld.StorageGame
 {
     public class Storage
