@@ -15,19 +15,18 @@ namespace AuroraWorld
     public class GameEntryPoint
     {
         private static GameEntryPoint _instance;
-        private static DIContainer _projectContainer;
 
         private readonly Coroutines _coroutines;
         private readonly UIRootView _uiRoot;
+
+        private DIContainer _rootContainer = new();
+        private DIContainer _cachedSceneContainer;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Init()
         {
             Application.targetFrameRate = 60;
             Screen.sleepTimeout = SleepTimeout.NeverSleep;
-
-            _projectContainer = new DIContainer();
-            _projectContainer.RegisterSingleton(_ => new Storage());
 
             _instance = new GameEntryPoint();
             _instance.RunGame();
@@ -37,12 +36,13 @@ namespace AuroraWorld
         {
             _coroutines = new GameObject("[COROUTINES]").AddComponent<Coroutines>();
             Object.DontDestroyOnLoad(_coroutines.gameObject);
-            _projectContainer.RegisterInstance(_coroutines);
 
             var prefabUIRoot = Resources.Load<UIRootView>("UIRoot");
             _uiRoot = Object.Instantiate(prefabUIRoot);
             Object.DontDestroyOnLoad(_uiRoot.gameObject);
-            _projectContainer.RegisterInstance(_uiRoot);
+            _rootContainer.RegisterInstance(_uiRoot);
+
+            _rootContainer.RegisterFactory(_ => new Storage()).AsSingle();
         }
 
         private void RunGame()
@@ -69,13 +69,15 @@ namespace AuroraWorld
         private IEnumerator LoadAndStartLobby(LobbyEnterParams enterParams = null)
         {
             _uiRoot.ShowLoadingScreen();
+            _cachedSceneContainer?.Dispose();
 
             yield return LoadScene(Scenes.BOOT);
             yield return LoadScene(Scenes.LOBBY);
             yield return null;
 
             var sceneEntryPoint = Object.FindObjectOfType<LobbyEntryPoint>();
-            sceneEntryPoint.Run(_projectContainer, enterParams).Subscribe(lobbyExitParams =>
+            var lobbyContainer = _cachedSceneContainer = new DIContainer(_rootContainer);
+            sceneEntryPoint.Run(lobbyContainer, enterParams).Subscribe(lobbyExitParams =>
             {
                 var targetSceneName = lobbyExitParams.TargetSceneEnterParams.SceneName;
                 IEnumerator enumerator;
@@ -98,13 +100,15 @@ namespace AuroraWorld
         private IEnumerator LoadAndStartGameplay(GameplayEnterParams enterParams = null)
         {
             _uiRoot.ShowLoadingScreen();
+            _cachedSceneContainer?.Dispose();
 
             yield return LoadScene(Scenes.BOOT);
             yield return LoadScene(Scenes.GAMEPLAY);
             yield return null;
 
             var sceneEntryPoint = Object.FindObjectOfType<GameplayEntryPoint>();
-            sceneEntryPoint.Run(_projectContainer, enterParams).Subscribe(gameplayExitParams =>
+            var gameplayContainer = _cachedSceneContainer = new DIContainer(_rootContainer);
+            sceneEntryPoint.Run(gameplayContainer, enterParams).Subscribe(gameplayExitParams =>
             {
                 var targetSceneName = gameplayExitParams.TargetSceneEnterParams.SceneName;
                 IEnumerator enumerator;
