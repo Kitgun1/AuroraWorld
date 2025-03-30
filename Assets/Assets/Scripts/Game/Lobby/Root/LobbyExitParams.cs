@@ -1,10 +1,10 @@
-namespace AuroraWorld.Game.Gameplay.Root
+namespace AuroraWorld.Game.Lobby.Root
 {
-    public class GameplayExitParams
+    public class LobbyExitParams
     {
         public SceneEnterParams TargetSceneEnterParams { get; }
 
-        public GameplayExitParams(SceneEnterParams targetSceneEnterParams)
+        public LobbyExitParams(SceneEnterParams targetSceneEnterParams)
         {
             TargetSceneEnterParams = targetSceneEnterParams;
         }

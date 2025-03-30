@@ -1,15 +1,20 @@
-using System;
+using R3;
 using UnityEngine;
 
 namespace AuroraWorld.Game.Lobby.Root.View
 {
     public class UILobbyRootBinder : MonoBehaviour
     {
-        public event Action GoToGameplayButtonClicked;
+        private Subject<Unit> _exitSceneSignalSubject;
 
         public void HandleGoToGameplayButtonClick()
         {
-            GoToGameplayButtonClicked?.Invoke();
+            _exitSceneSignalSubject?.OnNext(Unit.Default);
+        }
+
+        public void Bind(Subject<Unit> exitSceneSignalSubject)
+        {
+            _exitSceneSignalSubject = exitSceneSignalSubject;
         }
     }
 }

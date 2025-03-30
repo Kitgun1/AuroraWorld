@@ -1,12 +1,7 @@
 namespace AuroraWorld.Game.Gameplay.Root
 {
-    public class GameplayEnterParams
+    public class GameplayEnterParams : SceneEnterParams
     {
-        public string Result { get; }
-
-        public GameplayEnterParams(string result)
-        {
-            Result = result;
-        }
+        public GameplayEnterParams() : base(Scenes.GAMEPLAY) { }
     }
 }

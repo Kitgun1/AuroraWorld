@@ -1,11 +1,14 @@
+using System;
 using System.Collections;
 using Assets.Utils.Coroutine;
 using AuroraWorld.Game.Gameplay.Root;
 using AuroraWorld.Game.Lobby.Root;
 using AuroraWorld.StorageGame;
 using DI;
+using R3;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Object = UnityEngine.Object;
 
 namespace AuroraWorld
 {
@@ -49,10 +52,12 @@ namespace AuroraWorld
             switch (sceneName)
             {
                 case Scenes.LOBBY:
-                    _coroutines.StartCoroutine(LoadAndStartLobby());
+                    var lobbyEnterParams = new LobbyEnterParams("null");
+                    _coroutines.StartCoroutine(LoadAndStartLobby(lobbyEnterParams));
                     return;
                 case Scenes.GAMEPLAY:
-                    _coroutines.StartCoroutine(LoadAndStartGameplay());
+                    var gameplayEnterParams = new GameplayEnterParams();
+                    _coroutines.StartCoroutine(LoadAndStartGameplay(gameplayEnterParams));
                     return;
             }
 
@@ -61,7 +66,7 @@ namespace AuroraWorld
             _coroutines.StartCoroutine(LoadAndStartLobby());
         }
 
-        private IEnumerator LoadAndStartLobby()
+        private IEnumerator LoadAndStartLobby(LobbyEnterParams enterParams = null)
         {
             _uiRoot.ShowLoadingScreen();
 
@@ -70,14 +75,27 @@ namespace AuroraWorld
             yield return null;
 
             var sceneEntryPoint = Object.FindObjectOfType<LobbyEntryPoint>();
-            sceneEntryPoint.Run(_projectContainer);
+            sceneEntryPoint.Run(_projectContainer, enterParams).Subscribe(lobbyExitParams =>
+            {
+                var targetSceneName = lobbyExitParams.TargetSceneEnterParams.SceneName;
+                IEnumerator enumerator;
+                switch (targetSceneName)
+                {
+                    case Scenes.GAMEPLAY:
+                        var gameplayEnterParams = new GameplayEnterParams();
+                        enumerator = LoadAndStartGameplay(gameplayEnterParams);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
 
-            sceneEntryPoint.GoToGameplaySceneRequested += () => _coroutines.StartCoroutine(LoadAndStartGameplay());
+                _coroutines.StartCoroutine(enumerator);
+            });
 
             _uiRoot.HideLoadingScreen();
         }
 
-        private IEnumerator LoadAndStartGameplay()
+        private IEnumerator LoadAndStartGameplay(GameplayEnterParams enterParams = null)
         {
             _uiRoot.ShowLoadingScreen();
 
@@ -86,9 +104,24 @@ namespace AuroraWorld
             yield return null;
 
             var sceneEntryPoint = Object.FindObjectOfType<GameplayEntryPoint>();
-            sceneEntryPoint.Run(_projectContainer);
+            sceneEntryPoint.Run(_projectContainer, enterParams).Subscribe(gameplayExitParams =>
+            {
+                var targetSceneName = gameplayExitParams.TargetSceneEnterParams.SceneName;
+                IEnumerator enumerator;
+                switch (targetSceneName)
+                {
+                    case Scenes.LOBBY:
+                        var previousWorldName = gameplayExitParams.TargetSceneEnterParams
+                            .As<LobbyEnterParams>()
+                            .PreviousWorldName;
+                        enumerator = LoadAndStartLobby(new LobbyEnterParams(previousWorldName));
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
 
-            sceneEntryPoint.GoToLobbySceneRequested += () => _coroutines.StartCoroutine(LoadAndStartLobby());
+                _coroutines.StartCoroutine(enumerator);
+            });
 
             _uiRoot.HideLoadingScreen();
         }
