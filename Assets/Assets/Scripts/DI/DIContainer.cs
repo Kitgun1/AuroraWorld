@@ -3,37 +3,36 @@ using System.Collections.Generic;
 
 namespace DI
 {
-    public class DIContainer
+    public class DIContainer : IDisposable
     {
         private readonly DIContainer _parentContainer;
-        private readonly Dictionary<(string, Type), DIRegistration> _registrations = new();
-        private readonly HashSet<(string, Type)> _resolutions = new();
+        private readonly Dictionary<(string, Type), DIEntry> _entriesMap = new();
+        private readonly HashSet<(string, Type)> _resolutionsCache = new();
 
         public DIContainer(DIContainer parentContainer = null)
         {
             _parentContainer = parentContainer;
         }
 
-        public void RegisterSingleton<T>(Func<DIContainer, T> factory)
+        public DIEntry RegisterFactory<T>(Func<DIContainer, T> factory)
         {
-            RegisterSingleton(null, factory);
+            return RegisterFactory(null, factory);
         }
 
-        public void RegisterSingleton<T>(string tag, Func<DIContainer, T> factory)
+        public DIEntry RegisterFactory<T>(string tag, Func<DIContainer, T> factory)
         {
             var key = (tag, typeof(T));
-            Register(key, factory, true);
-        }
-        
-        public void RegisterTransient<T>(Func<DIContainer, T> factory)
-        {
-            RegisterTransient(null, factory);
-        }
+            if (_entriesMap.ContainsKey(key))
+            {
+                throw new Exception(
+                    $"DI: Factory with tag {key.Item1} and type {key.Item2.FullName} has already registered");
+            }
 
-        public void RegisterTransient<T>(string tag, Func<DIContainer, T> factory)
-        {
-            var key = (tag, typeof(T));
-            Register(key, factory, false);
+            var diEntry = new DIEntry<T>(this, factory);
+            
+            _entriesMap[key] = diEntry;
+
+            return diEntry;
         }
 
         public void RegisterInstance<T>(T instance)
@@ -45,45 +44,32 @@ namespace DI
         {
             var key = (tag, typeof(T));
             
-            if (_registrations.ContainsKey(key))
+            if (_entriesMap.ContainsKey(key))
             {
                 throw new Exception(
                     $"DI: Factory with tag {key.Item1} and type {key.Item2.FullName} has already registered");
             }
 
-            _registrations[key] = new DIRegistration
-            {
-                Instance = instance,
-                IsSingleton = true
-            };
+            var diEntry = new DIEntry<T>(instance);
+            _entriesMap[key] = diEntry;
         }
 
         public T Resolve<T>(string tag = null)
         {
             var key = (tag, typeof(T));
 
-            if (_resolutions.Contains(key))
+            if (_resolutionsCache.Contains(key))
             {
                 throw new Exception($"Cyclic dependency for tag {key.tag} and type {key.Item2.FullName}");
             }
 
-            _resolutions.Add(key);
+            _resolutionsCache.Add(key);
 
             try
             {
-                if (_registrations.TryGetValue(key, out var registration))
+                if (_entriesMap.TryGetValue(key, out var diEntry))
                 {
-                    if (registration.IsSingleton)
-                    {
-                        if (registration.Instance == null && registration.Factory != null)
-                        {
-                            registration.Instance = registration.Factory(this);
-                        }
-
-                        return (T)registration.Instance;
-                    }
-
-                    return (T)registration.Factory(this);
+                    return diEntry.Resolve<T>();
                 }
 
                 if (_parentContainer != null)
@@ -93,25 +79,19 @@ namespace DI
             }
             finally
             {
-                _resolutions.Remove(key);
+                _resolutionsCache.Remove(key);
             } 
             
             throw new Exception($"Couldn't find dependency for tag {tag} and type {key.Item2.FullName}");
         }
 
-        private void Register<T>((string, Type) key, Func<DIContainer, T> factory, bool isSingleton)
+        public void Dispose()
         {
-            if (_registrations.ContainsKey(key))
+            var entries = _entriesMap.Values;
+            foreach (var entry in entries)
             {
-                throw new Exception(
-                    $"DI: Factory with tag {key.Item1} and type {key.Item2.FullName} has already registered");
+                entry.Dispose();
             }
-
-            _registrations[key] = new DIRegistration
-            {
-                Factory = c => factory(c),
-                IsSingleton = isSingleton
-            };
         }
     }
 }
