@@ -10,10 +10,10 @@ namespace AuroraWorld.Game.Gameplay.Root
     {
         [SerializeField] private UIGameplayRootBinder _sceneUIRootPrefab;
 
-        public Observable<GameplayExitParams> Run(DIContainer parentContainer, GameplayEnterParams enterParams)
+        public Observable<GameplayExitParams> Run(DIContainer gameplayContainer, GameplayEnterParams enterParams)
         {
-            var gameplayContainer = new DIContainer(parentContainer);
-
+            GameplayRegistrations.Register(gameplayContainer, enterParams);
+            
             var uiScene = Instantiate(_sceneUIRootPrefab);
             var uiRootView = gameplayContainer.Resolve<UIRootView>();
             uiRootView.AttachSceneUI(uiScene.gameObject);

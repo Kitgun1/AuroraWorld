@@ -10,27 +10,26 @@ namespace AuroraWorld.Game.Lobby.Root
     {
         [SerializeField] private UILobbyRootBinder _sceneUIRootPrefab;
 
-        private DIContainer _lobbyContainer;
-
-        public Observable<LobbyExitParams> Run(DIContainer parentContainer, LobbyEnterParams enterParams)
+        public Observable<LobbyExitParams> Run(DIContainer lobbyContainer, LobbyEnterParams enterParams)
         {
-            _lobbyContainer = new DIContainer(parentContainer);
+            LobbyRegistrations.Register(lobbyContainer, enterParams);
+            
             // _lobbyContainer.RegisterSingleton(UI_CAMERA_CONFIG, UICameraConfigFactory);
             // _lobbyContainer.RegisterSingleton(UI_CAMERA, UICameraFactory);
 
             var uiScene = Instantiate(_sceneUIRootPrefab);
-            var uiRootView = _lobbyContainer.Resolve<UIRootView>();
+            var uiRootView = lobbyContainer.Resolve<UIRootView>();
             uiRootView.AttachSceneUI(uiScene.gameObject);
 
             Debug.Log($"previous world: '{enterParams?.PreviousWorldName}'");
-            
+
             var exitSceneSignalSubject = new Subject<Unit>();
             uiScene.Bind(exitSceneSignalSubject);
 
             var gameplayEnterParams = new GameplayEnterParams();
             var lobbyExitParams = new LobbyExitParams(gameplayEnterParams);
             var exitToLobbySceneSignal = exitSceneSignalSubject.Select(_ => lobbyExitParams);
-            
+
             return exitToLobbySceneSignal;
         }
 

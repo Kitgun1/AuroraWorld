@@ -6,7 +6,6 @@ namespace AuroraWorld.Game.Gameplay.Root
     {
         public static void Register(DIContainer container, GameplayEnterParams enterParams)
         {
-            
         }
     }
 }

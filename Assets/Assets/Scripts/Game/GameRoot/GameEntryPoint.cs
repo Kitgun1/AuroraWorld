@@ -3,7 +3,6 @@ using System.Collections;
 using Assets.Utils.Coroutine;
 using AuroraWorld.Game.Gameplay.Root;
 using AuroraWorld.Game.Lobby.Root;
-using AuroraWorld.StorageGame;
 using DI;
 using R3;
 using UnityEngine;
@@ -41,8 +40,8 @@ namespace AuroraWorld
             _uiRoot = Object.Instantiate(prefabUIRoot);
             Object.DontDestroyOnLoad(_uiRoot.gameObject);
             _rootContainer.RegisterInstance(_uiRoot);
-
-            _rootContainer.RegisterFactory(_ => new Storage()).AsSingle();
+            
+            GameRegistrations.Register(_rootContainer);
         }
 
         private void RunGame()
@@ -130,7 +129,7 @@ namespace AuroraWorld
             _uiRoot.HideLoadingScreen();
         }
 
-        private IEnumerator LoadScene(string sceneName)
+        private static IEnumerator LoadScene(string sceneName)
         {
             yield return SceneManager.LoadSceneAsync(sceneName);
         }
