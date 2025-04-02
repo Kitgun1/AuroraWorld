@@ -1,18 +1,20 @@
+using R3;
+
 namespace AuroraWorld.StorageGame
 {
     public class Storage
     {
-        private readonly IStorageType _storage;
+        private readonly IStorageProvider _storage;
 
         public Storage()
         {
+            _storage = new WindowsStorageProvider();
 #if UNITY_EDITOR
-            _storage = new WindowsStorage();
             // TODO: storage for server, yandex game server
 #endif
         }
 
-        public void Save<T>(string tag, T obj) => _storage.Save(tag, obj);
-        public T Load<T>(string tag, T defaultObj = default) => _storage.Load(tag, defaultObj);
+        public Observable<bool> Save<T>(string tag, T obj) => _storage.Save(tag, obj);
+        public Observable<T> Load<T>(string tag, T defaultObj = default) => _storage.Load(tag, defaultObj);
     }
 }
