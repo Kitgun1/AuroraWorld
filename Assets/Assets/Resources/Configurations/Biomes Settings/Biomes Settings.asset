@@ -1,0 +1,75 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0693f5f4b2c4066bc6952af6c3e338c, type: 3}
+  m_Name: Biomes Settings
+  m_EditorClassIdentifier: 
+  BiomeSettings:
+  - GlobalGeoId: "\u0417\u0435\u043C\u043B\u044F"
+    Biome: 0
+    Scale: 0.1
+    ContinentHeightRange: {x: 0, y: 0.8}
+    TemperatureRange: {x: 0.1, y: 0.75}
+    HumidityRange: {x: 0.2, y: 0.7}
+  - GlobalGeoId: "\u0417\u0435\u043C\u043B\u044F"
+    Biome: 1
+    Scale: 0.1
+    ContinentHeightRange: {x: 0, y: 0.5}
+    TemperatureRange: {x: 0.5, y: 0.8}
+    HumidityRange: {x: 0.6, y: 1}
+  - GlobalGeoId: "\u0417\u0435\u043C\u043B\u044F"
+    Biome: 2
+    Scale: 0.1
+    ContinentHeightRange: {x: 0, y: 1}
+    TemperatureRange: {x: 0.2, y: 1}
+    HumidityRange: {x: 0, y: 0.55}
+  - GlobalGeoId: "\u0417\u0435\u043C\u043B\u044F"
+    Biome: 3
+    Scale: 0.1
+    ContinentHeightRange: {x: 0.1, y: 1}
+    TemperatureRange: {x: 0, y: 1}
+    HumidityRange: {x: 0, y: 0.3}
+  - GlobalGeoId: "\u0417\u0435\u043C\u043B\u044F"
+    Biome: 4
+    Scale: 0.1
+    ContinentHeightRange: {x: 0.7, y: 0.9}
+    TemperatureRange: {x: 0, y: 1}
+    HumidityRange: {x: 0, y: 1}
+  - GlobalGeoId: "\u0417\u0435\u043C\u043B\u044F"
+    Biome: 5
+    Scale: 0.1
+    ContinentHeightRange: {x: 0.88, y: 1}
+    TemperatureRange: {x: 0, y: 1}
+    HumidityRange: {x: 0, y: 1}
+  - GlobalGeoId: "\u0417\u0435\u043C\u043B\u044F"
+    Biome: 6
+    Scale: 0.1
+    ContinentHeightRange: {x: 0, y: 0.8}
+    TemperatureRange: {x: 0, y: 0.15}
+    HumidityRange: {x: 0, y: 1}
+  - GlobalGeoId: "\u0412\u043E\u0434\u0430"
+    Biome: 7
+    Scale: 0.1
+    ContinentHeightRange: {x: 0, y: 1}
+    TemperatureRange: {x: 0, y: 0.15}
+    HumidityRange: {x: 0, y: 1}
+  - GlobalGeoId: "\u0412\u043E\u0434\u0430"
+    Biome: 8
+    Scale: 0.1
+    ContinentHeightRange: {x: 0, y: 1}
+    TemperatureRange: {x: 0.2, y: 1}
+    HumidityRange: {x: 0, y: 1}
+  - GlobalGeoId: "\u0412\u043E\u0434\u0430"
+    Biome: 9
+    Scale: 0.1
+    ContinentHeightRange: {x: 0, y: 1}
+    TemperatureRange: {x: 0.1, y: 0.3}
+    HumidityRange: {x: 0, y: 1}

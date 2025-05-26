@@ -1,7 +1,15 @@
-namespace AuroraWorld.Game.Gameplay.Root
+using System;
+using AuroraWorld.GameRoot;
+
+namespace AuroraWorld.Gameplay.Root
 {
     public class GameplayEnterParams : SceneEnterParams
     {
-        public GameplayEnterParams() : base(Scenes.GAMEPLAY) { }
+        public readonly string WorldSeed;
+
+        public GameplayEnterParams(string worldSeed) : base(Scenes.GAMEPLAY)
+        {
+            WorldSeed = worldSeed ?? Guid.NewGuid().ToString();
+        }
     }
 }

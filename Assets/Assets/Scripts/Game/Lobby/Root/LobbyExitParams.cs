@@ -1,4 +1,6 @@
-namespace AuroraWorld.Game.Lobby.Root
+using AuroraWorld.GameRoot;
+
+namespace AuroraWorld.App.Lobby.Root
 {
     public class LobbyExitParams
     {

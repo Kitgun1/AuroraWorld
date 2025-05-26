@@ -1,6 +1,6 @@
 using DI;
 
-namespace AuroraWorld.Game.Gameplay.Root.View
+namespace AuroraWorld.Gameplay.Root.View
 {
     public static class GameplayViewModelsRegistrations
     {

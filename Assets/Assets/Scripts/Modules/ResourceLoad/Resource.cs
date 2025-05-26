@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace AuroraWorld.ResourceLoad
+namespace AuroraWorld.App.GameResources
 {
     public class Resource<T> where T : Object
     {

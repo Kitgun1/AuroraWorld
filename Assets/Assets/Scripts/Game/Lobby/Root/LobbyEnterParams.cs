@@ -1,12 +1,11 @@
-namespace AuroraWorld.Game.Lobby.Root
+using AuroraWorld.GameRoot;
+
+namespace AuroraWorld.App.Lobby.Root
 {
     public class LobbyEnterParams : SceneEnterParams
     {
-        public string PreviousWorldName { get; }
-        
-        public LobbyEnterParams(string previousWorldName) : base(Scenes.LOBBY)
+        public LobbyEnterParams() : base(Scenes.LOBBY)
         {
-            PreviousWorldName = previousWorldName;
         }
     }
 }

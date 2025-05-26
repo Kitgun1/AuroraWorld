@@ -1,10 +1,11 @@
-using AuroraWorld.Game.Gameplay.Root.View;
-using AuroraWorld.Game.Lobby.Root;
+using AuroraWorld.App.Lobby.Root;
+using AuroraWorld.Gameplay.Root.View;
+using AuroraWorld.GameRoot.View;
 using DI;
 using R3;
 using UnityEngine;
 
-namespace AuroraWorld.Game.Gameplay.Root
+namespace AuroraWorld.Gameplay.Root
 {
     public class GameplayEntryPoint : MonoBehaviour
     {
@@ -21,7 +22,7 @@ namespace AuroraWorld.Game.Gameplay.Root
             var exitSignalSubject = new Subject<Unit>();
             uiScene.Bind(exitSignalSubject);
 
-            var lobbyEnterParams = new LobbyEnterParams($"world{Random.Range(1, 25)}");
+            var lobbyEnterParams = new LobbyEnterParams();
             var gameplayExitParams = new GameplayExitParams(lobbyEnterParams);
             var exitToLobbySceneSignal = exitSignalSubject.Select(_ => gameplayExitParams);
 

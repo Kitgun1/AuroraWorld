@@ -1,15 +1,16 @@
 using System;
 using System.Collections;
 using Assets.Utils.Coroutine;
-using AuroraWorld.Game.Gameplay.Root;
-using AuroraWorld.Game.Lobby.Root;
+using AuroraWorld.App.Lobby.Root;
+using AuroraWorld.Gameplay.Root;
+using AuroraWorld.GameRoot.View;
 using DI;
 using R3;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Object = UnityEngine.Object;
 
-namespace AuroraWorld
+namespace AuroraWorld.GameRoot
 {
     public class GameEntryPoint
     {
@@ -18,7 +19,7 @@ namespace AuroraWorld
         private readonly Coroutines _coroutines;
         private readonly UIRootView _uiRoot;
 
-        private DIContainer _rootContainer = new();
+        private readonly DIContainer _rootContainer = new();
         private DIContainer _cachedSceneContainer;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -40,7 +41,8 @@ namespace AuroraWorld
             _uiRoot = Object.Instantiate(prefabUIRoot);
             Object.DontDestroyOnLoad(_uiRoot.gameObject);
             _rootContainer.RegisterInstance(_uiRoot);
-            
+            _rootContainer.RegisterInstance(_coroutines);
+
             GameRegistrations.Register(_rootContainer);
         }
 
@@ -51,11 +53,11 @@ namespace AuroraWorld
             switch (sceneName)
             {
                 case Scenes.LOBBY:
-                    var lobbyEnterParams = new LobbyEnterParams("null");
+                    var lobbyEnterParams = new LobbyEnterParams();
                     _coroutines.StartCoroutine(LoadAndStartLobby(lobbyEnterParams));
                     return;
                 case Scenes.GAMEPLAY:
-                    var gameplayEnterParams = new GameplayEnterParams();
+                    var gameplayEnterParams = new GameplayEnterParams(Guid.NewGuid().ToString());
                     _coroutines.StartCoroutine(LoadAndStartGameplay(gameplayEnterParams));
                     return;
             }
@@ -83,7 +85,7 @@ namespace AuroraWorld
                 switch (targetSceneName)
                 {
                     case Scenes.GAMEPLAY:
-                        var gameplayEnterParams = new GameplayEnterParams();
+                        var gameplayEnterParams = lobbyExitParams.TargetSceneEnterParams.As<GameplayEnterParams>();
                         enumerator = LoadAndStartGameplay(gameplayEnterParams);
                         break;
                     default:
@@ -114,10 +116,10 @@ namespace AuroraWorld
                 switch (targetSceneName)
                 {
                     case Scenes.LOBBY:
-                        var previousWorldName = gameplayExitParams.TargetSceneEnterParams
+                        /*var previousWorldName = gameplayExitParams.TargetSceneEnterParams
                             .As<LobbyEnterParams>()
-                            .PreviousWorldName;
-                        enumerator = LoadAndStartLobby(new LobbyEnterParams(previousWorldName));
+                            .PreviousWorldName;*/
+                        enumerator = LoadAndStartLobby(new LobbyEnterParams());
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();

@@ -1,4 +1,6 @@
-namespace AuroraWorld.Game.Gameplay.Root
+using AuroraWorld.GameRoot;
+
+namespace AuroraWorld.Gameplay.Root
 {
     public class GameplayExitParams
     {

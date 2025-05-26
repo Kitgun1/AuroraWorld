@@ -1,4 +1,4 @@
-namespace AuroraWorld
+namespace AuroraWorld.GameRoot
 {
     public abstract class SceneEnterParams
     {

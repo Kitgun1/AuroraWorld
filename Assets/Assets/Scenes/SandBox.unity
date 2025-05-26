@@ -122,6 +122,99 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &329660128
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 329660129}
+  - component: {fileID: 329660132}
+  - component: {fileID: 329660131}
+  - component: {fileID: 329660133}
+  m_Layer: 5
+  m_Name: Image
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &329660129
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 329660128}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1907448870}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &329660131
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 329660128}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 0
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 0}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &329660132
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 329660128}
+  m_CullTransparentMesh: 1
+--- !u!114 &329660133
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 329660128}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fa8916590ab44fe193d76ec366d2a47a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _seed: "\u0430\u0443\u0446\u0443"
+  _quality: 2
+  _settings:
+    ContinentScale: 0.002
+    BiomesConfiguration: {fileID: 11400000, guid: 5fd9694e139b806418a4f63043dde7bc, type: 2}
 --- !u!850595691 &589253088
 LightingSettings:
   m_ObjectHideFlags: 0
@@ -263,7 +356,7 @@ Transform:
   m_GameObject: {fileID: 1399149908}
   serializedVersion: 2
   m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 60, y: 80, z: 35}
+  m_LocalPosition: {x: 0, y: 10, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -363,7 +456,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
---- !u!1 &1918737644
+--- !u!1 &1907448866
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -371,132 +464,104 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1918737646}
-  - component: {fileID: 1918737645}
-  m_Layer: 0
-  m_Name: World Sample
+  - component: {fileID: 1907448870}
+  - component: {fileID: 1907448869}
+  - component: {fileID: 1907448868}
+  - component: {fileID: 1907448867}
+  m_Layer: 5
+  m_Name: Canvas
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1918737645
+--- !u!114 &1907448867
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1918737644}
+  m_GameObject: {fileID: 1907448866}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c8197a356606424bbbbc9c3f4d735938, type: 3}
+  m_Script: {fileID: 11500000, guid: dc42784cf147c0c48a680349fa168899, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _hexagonObj: {fileID: 2096212011711890163, guid: 759e68fd2ee4297499851ef9ab8eddf1, type: 3}
-  SizeMapDemo: {x: 100, y: 100}
-  GenerationSettings:
-    ContinentScale: 0.015
-    Exponent: 0.800000011920929
-    GlobalBiomes:
-    - MinHeight: 0.7
-      Biome: 102
-      HumidityScale: 0.2
-      TemperatureScale: 0.2
-      LocalBiomes: []
-    - MinHeight: 0.23
-      Biome: 21
-      HumidityScale: 0.1
-      TemperatureScale: 0.05
-      LocalBiomes:
-      - BiomeType: 25
-        MinHeight: 0.9
-        Scale: 0.02
-        FilterTemperatureRange: {x: 0.7, y: 0.8}
-        FilterHumidityRange: {x: 0.4, y: 0.6}
-      - BiomeType: 27
-        MinHeight: 0.9
-        Scale: 0.03
-        FilterTemperatureRange: {x: 0.3, y: 0.5}
-        FilterHumidityRange: {x: 0.7, y: 1}
-      - BiomeType: 20
-        MinHeight: 0.8
-        Scale: 0.03
-        FilterTemperatureRange: {x: 0.5, y: 1}
-        FilterHumidityRange: {x: 0, y: 0.4}
-      - BiomeType: 28
-        MinHeight: 0.8
-        Scale: 0.03
-        FilterTemperatureRange: {x: 0, y: 0.5}
-        FilterHumidityRange: {x: 0, y: 1}
-      - BiomeType: 29
-        MinHeight: 0.8
-        Scale: 0.01
-        FilterTemperatureRange: {x: 0, y: 0.5}
-        FilterHumidityRange: {x: 0, y: 1}
-      - BiomeType: 26
-        MinHeight: 0.8
-        Scale: 0.04
-        FilterTemperatureRange: {x: 0.4, y: 1}
-        FilterHumidityRange: {x: 0.5, y: 1}
-      - BiomeType: 24
-        MinHeight: 0.8
-        Scale: 0.04
-        FilterTemperatureRange: {x: 0.6, y: 1}
-        FilterHumidityRange: {x: 0.7, y: 1}
-      - BiomeType: 23
-        MinHeight: 0.8
-        Scale: 0.04
-        FilterTemperatureRange: {x: 0.3, y: 0.6}
-        FilterHumidityRange: {x: 0.7, y: 1}
-      - BiomeType: 22
-        MinHeight: 0.8
-        Scale: 0.05
-        FilterTemperatureRange: {x: 0.4, y: 0.7}
-        FilterHumidityRange: {x: 0.4, y: 0.7}
-      - BiomeType: 21
-        MinHeight: 0.8
-        Scale: 0.04
-        FilterTemperatureRange: {x: 0.5, y: 0.7}
-        FilterHumidityRange: {x: 0.4, y: 0.9}
-    - MinHeight: 0.21
-      Biome: 11
-      HumidityScale: 0
-      TemperatureScale: 0
-      LocalBiomes: []
-    - MinHeight: 0
-      Biome: 2
-      HumidityScale: 0
-      TemperatureScale: 0.09
-      LocalBiomes:
-      - BiomeType: 3
-        MinHeight: 0.7
-        Scale: 0.04
-        FilterTemperatureRange: {x: 0.55, y: 1}
-        FilterHumidityRange: {x: 0, y: 1}
-      - BiomeType: 1
-        MinHeight: 0.7
-        Scale: 0.04
-        FilterTemperatureRange: {x: 0, y: 0.44}
-        FilterHumidityRange: {x: 0, y: 1}
---- !u!4 &1918737646
-Transform:
+  m_IgnoreReversedGraphics: 1
+  m_BlockingObjects: 0
+  m_BlockingMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+--- !u!114 &1907448868
+MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1918737644}
-  serializedVersion: 2
+  m_GameObject: {fileID: 1907448866}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_UiScaleMode: 0
+  m_ReferencePixelsPerUnit: 100
+  m_ScaleFactor: 1
+  m_ReferenceResolution: {x: 800, y: 600}
+  m_ScreenMatchMode: 0
+  m_MatchWidthOrHeight: 0
+  m_PhysicalUnit: 3
+  m_FallbackScreenDPI: 96
+  m_DefaultSpriteDPI: 96
+  m_DynamicPixelsPerUnit: 1
+  m_PresetInfoIsWorld: 0
+--- !u!223 &1907448869
+Canvas:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1907448866}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_RenderMode: 0
+  m_Camera: {fileID: 0}
+  m_PlaneDistance: 100
+  m_PixelPerfect: 0
+  m_ReceivesEvents: 1
+  m_OverrideSorting: 0
+  m_OverridePixelPerfect: 0
+  m_SortingBucketNormalizedSize: 0
+  m_VertexColorAlwaysGammaSpace: 0
+  m_AdditionalShaderChannelsFlag: 0
+  m_UpdateRectTransformForStandalone: 0
+  m_SortingLayerID: 0
+  m_SortingOrder: 0
+  m_TargetDisplay: 0
+--- !u!224 &1907448870
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1907448866}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0, y: 0, z: 0}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 329660129}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0, y: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 1399149911}
   - {fileID: 1718449558}
-  - {fileID: 1918737646}
+  - {fileID: 1907448870}

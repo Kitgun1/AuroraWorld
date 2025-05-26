@@ -1,6 +1,6 @@
 using R3;
 
-namespace AuroraWorld.StorageGame
+namespace AuroraWorld.App.Database
 {
     public class AkiCloudStorageProvider : IStorageProvider
     {

@@ -1,7 +1,7 @@
 using R3;
 using UnityEngine;
 
-namespace AuroraWorld.Game.Gameplay.Root.View
+namespace AuroraWorld.Gameplay.Root.View
 {
     public class UIGameplayRootBinder : MonoBehaviour
     {

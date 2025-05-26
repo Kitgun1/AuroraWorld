@@ -1,6 +1,6 @@
 using DI;
 
-namespace AuroraWorld.Game.Lobby.Root.View
+namespace AuroraWorld.App.Lobby.Root.View
 {
     public class LobbyViewModelsRegistrations
     {

@@ -1,7 +1,7 @@
 using R3;
 using UnityEngine;
 
-namespace AuroraWorld.Game.Lobby.Root.View
+namespace AuroraWorld.App.Lobby.Root.View
 {
     public class UILobbyRootBinder : MonoBehaviour
     {

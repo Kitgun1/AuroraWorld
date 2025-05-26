@@ -1,8 +1,8 @@
 using Assets.Scripts.Services;
-using AuroraWorld.StorageGame;
+using AuroraWorld.App.Database;
 using DI;
 
-namespace AuroraWorld
+namespace AuroraWorld.GameRoot
 {
     public static class GameRegistrations
     {

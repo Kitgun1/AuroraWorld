@@ -2,7 +2,7 @@ using System.IO;
 using Newtonsoft.Json;
 using R3;
 
-namespace AuroraWorld.StorageGame
+namespace AuroraWorld.App.Database
 {
     public class WindowsStorageProvider : IStorageProvider
     {

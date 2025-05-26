@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace AuroraWorld
+namespace AuroraWorld.GameRoot.View
 {
     public class UIRootView : MonoBehaviour
     {
