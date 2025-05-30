@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using AuroraWorld.Gameplay.World.Data;
 using DI;
 using ObservableCollections;
 using R3;
@@ -13,7 +12,7 @@ namespace AuroraWorld.Gameplay.World.Geometry
     {
         private readonly Transform _parentMesh;
         private readonly GeoConfiguration _geoConfiguration;
-        private readonly Dictionary<Vector3Int, MeshFilter> _chunks = new();
+        private readonly Dictionary<Vector3Int, (MeshFilter filter, MeshCollider collider)> _chunks = new();
 
         public ObservableDictionary<Vector3Int, HexEntityProxy> Hexagons { get; } = new();
         public ObservableList<MergedHexEntityGroupProxy> MergedHexagon { get; } = new();
@@ -77,7 +76,8 @@ namespace AuroraWorld.Gameplay.World.Geometry
             mesh.RecalculateNormals();
 
             if (!_chunks.ContainsKey(chunkPosition)) InstanceChunkObject(chunkPosition);
-            _chunks[chunkPosition].mesh = mesh;
+            _chunks[chunkPosition].filter.mesh = mesh;
+            _chunks[chunkPosition].collider.sharedMesh = mesh;
         }
 
         public void AttachHexagon(Vector3Int position)
@@ -86,33 +86,53 @@ namespace AuroraWorld.Gameplay.World.Geometry
 
             if (!_chunks.ContainsKey(chunkPosition)) InstanceChunkObject(chunkPosition);
 
-            var chunkMesh = _chunks[chunkPosition].mesh;
-            var hexProxy = InstanceHexagonEntityProxy(position)
-                .InitializeNeighbors(this)
-                .InitializeMesh();
-
-            var successAdded = Hexagons.TryAdd(hexProxy.Position, hexProxy);
-            if (!successAdded) Hexagons[hexProxy.Position] = hexProxy;
-
-            var newTriangles = hexProxy.EntityMesh.Triangles.Select(t => t + chunkMesh.vertices.Length);
-            var newVertices = hexProxy.EntityMesh.Vertices;
-            var newColors = hexProxy.EntityMesh.Colors;
-
+            var chunkMesh = _chunks[chunkPosition].filter.mesh;
             var newMesh = new Mesh() { name = $"Chunk position {chunkPosition}" };
-            var mergedVertices = chunkMesh.vertices.ToList();
-            mergedVertices.AddRange(newVertices);
-            newMesh.vertices = mergedVertices.ToArray();
+            if (Hexagons.TryGetValue(position, out var hexagon))
+            {
+                var hexagonsInChunk = Hexagons
+                    .Where(hex => hex.Value.ChunkPosition == chunkPosition)
+                    .Select(p => p.Value).ToArray();
 
-            var mergedColors = chunkMesh.colors.ToList();
-            mergedColors.AddRange(newColors);
-            newMesh.colors = mergedColors.ToArray();
+                newMesh.vertices = hexagonsInChunk.SelectMany(h => h.EntityMesh.Vertices).ToArray();
+                newMesh.colors = hexagonsInChunk.SelectMany(h => h.EntityMesh.Colors).ToArray();
+                var triangles = new List<int>();
+                var countVertices = 0;
+                for (int i = 0; i < hexagonsInChunk.Length; i++)
+                {
+                    triangles.AddRange(hexagonsInChunk[i].EntityMesh.Triangles.Select(t => t + countVertices));
+                    countVertices += hexagonsInChunk[i].EntityMesh.Vertices.Length;
+                }
 
-            var mergedTriangles = chunkMesh.triangles.ToList();
-            mergedTriangles.AddRange(newTriangles);
-            newMesh.triangles = mergedTriangles.ToArray();
+                newMesh.triangles = triangles.ToArray();
+            }
+            else
+            {
+                hexagon = InstanceHexagonEntityProxy(position)
+                    .InitializeNeighbors(this)
+                    .InitializeMesh();
+                Hexagons[hexagon.Position] = hexagon;
+                
+                var newTriangles = hexagon.EntityMesh.Triangles.Select(t => t + chunkMesh.vertices.Length);
+                var newVertices = hexagon.EntityMesh.Vertices;
+                var newColors = hexagon.EntityMesh.Colors;
 
+                var mergedVertices = chunkMesh.vertices.ToList();
+                mergedVertices.AddRange(newVertices);
+                newMesh.vertices = mergedVertices.ToArray();
+
+                var mergedColors = chunkMesh.colors.ToList();
+                mergedColors.AddRange(newColors);
+                newMesh.colors = mergedColors.ToArray();
+
+                var mergedTriangles = chunkMesh.triangles.ToList();
+                mergedTriangles.AddRange(newTriangles);
+                newMesh.triangles = mergedTriangles.ToArray();
+            }
+            
             newMesh.RecalculateNormals();
-            _chunks[chunkPosition].mesh = newMesh;
+            _chunks[chunkPosition].filter.mesh = newMesh;
+            _chunks[chunkPosition].collider.sharedMesh = newMesh;
         }
 
         private HexEntityProxy InstanceHexagonEntityProxy(Vector3Int cubePosition)
@@ -135,16 +155,16 @@ namespace AuroraWorld.Gameplay.World.Geometry
             var filter = chunk.AddComponent<MeshFilter>();
             var mesh = new Mesh
             {
-                name = $"Chunk {chunkPosition}",
-                vertices = { },
-                triangles = { },
-                colors = { }
+                name = $"Chunk {chunkPosition}"
             };
             filter.mesh = mesh;
             var renderer = chunk.AddComponent<MeshRenderer>();
             renderer.material = Resources.Load<Material>("Vertex Material");
 
-            _chunks.Add(chunkPosition, filter);
+            var collider = chunk.AddComponent<MeshCollider>();
+            collider.sharedMesh = mesh;
+
+            _chunks.Add(chunkPosition, (filter, collider));
         }
 
         private Vector3Int FindNearLand(int maxSteps = 100)
