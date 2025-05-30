@@ -7,64 +7,208 @@ namespace Assets.Utils.Coroutine
 {
     public class ThickLineMesh
     {
-        private Vector3[] _points { get; }
-        private float _thickness { get; }
+        private (Edge inner, Edge center, Edge outer)?[][] _lines;
+        private readonly float _thickness;
+
         public Mesh Mesh { get; private set; }
+        public HexEntityProxy[] SelectedHexagons { get; private set; }
+
+        public ThickLineMesh(float thickness)
+        {
+            _thickness = thickness;
+        }
 
         public void Construct(HexEntityProxy[] selectedHexes)
         {
-            var resultEdges = new List<Edge>();
+            SelectedHexagons = selectedHexes;
+            _lines = GeneratePath(selectedHexes);
+            Mesh = GenerateMesh();
+        }
+
+        private (Edge inner, Edge center, Edge outer)?[][] GeneratePath(HexEntityProxy[] selectedHexes)
+        {
+            selectedHexes = selectedHexes.GroupBy(h => h.Position).Select(g => g.First()).ToArray();
+
+            var resultEdges = new List<(Edge inner, Edge center, Edge outer)?>();
+            var lines = new List<(Edge inner, Edge center, Edge outer)?[]>();
+
             foreach (var entityProxy in selectedHexes)
             {
                 var edges = entityProxy.EntityMesh.Edges;
-                foreach (var edge in edges)
+                for (var i = 0; i < edges.Length; i++)
                 {
-                    var edgeNeighborPosition = edge.CubePosition.Neighbor(edge.Direction);
-                    if (selectedHexes.Any(e => e.Position == edgeNeighborPosition)) continue;
-                    resultEdges.Add(edge);
+                    var edge = edges[i];
+                    var neighborPosition = edge.CubePosition.Neighbor(edge.Direction);
+                    if (selectedHexes.Any(e => e.Position == neighborPosition)) continue;
+                    resultEdges.Add(
+                        (entityProxy.EntityMesh.InnerEdges[i],
+                            entityProxy.EntityMesh.Edges[i],
+                            entityProxy.EntityMesh.OuterEdges[i]));
                 }
             }
+
+            var notCheckedEdge = new List<(Edge inner, Edge center, Edge outer)?>(resultEdges);
+            var currentEdge = notCheckedEdge[0];
+
+            var line = new List<(Edge inner, Edge center, Edge outer)?>();
+            while (true)
+            {
+                line.Add(currentEdge);
+                notCheckedEdge.Remove(currentEdge);
+                currentEdge = notCheckedEdge.FirstOrDefault(e => e?.center.P1 == currentEdge?.center.P2);
+                if (currentEdge == null)
+                {
+                    lines.Add(line.ToArray());
+                    if (notCheckedEdge.Count == 0) break;
+                    line = new List<(Edge inner, Edge center, Edge outer)?>();
+                    currentEdge = notCheckedEdge[0];
+                }
+            }
+
+            return lines.ToArray();
         }
 
         private Mesh GenerateMesh()
         {
-            var mesh = new Mesh();
+            Mesh mesh = new Mesh();
             List<Vector3> vertices = new List<Vector3>();
             List<int> triangles = new List<int>();
 
-            for (int i = 0; i < _points.Length; i++)
+            var trianglesOffset = 0;
+            foreach (var line in _lines)
             {
-                Vector3 point = _points[i];
-                Vector3 prevPoint = _points[(i - 1 + _points.Length) % _points.Length];
-                Vector3 nextPoint = _points[(i + 1) % _points.Length];
-                Vector3 prevDirection = (point - prevPoint).normalized;
-                Vector3 nextDirection = (nextPoint - point).normalized;
-                Vector3 avgDirection = (prevDirection + nextDirection).normalized;
-                Vector3 normal = Vector3.Cross(avgDirection, Vector3.up).normalized;
+                for (int i = 0; i < line.Length; i++)
+                {
+                    var edges = line[i]!.Value;
+                    var afterEdges = line[(i + 1) % line.Length]!.Value;
+                    var maxY = Mathf.Max(edges.inner.P1.y, edges.outer.P1.y) + 0.1f;
+                    var maxEndY = Mathf.Max(afterEdges.inner.P1.y, afterEdges.outer.P1.y) + 0.1f;
 
-                vertices.Add(point + normal * _thickness / 2);
-                vertices.Add(point - normal * _thickness / 2);
+                    // Верхняя грань
+                    vertices.Add(new Vector3(edges.inner.P1.x, maxY, edges.inner.P1.z));
+                    vertices.Add(new Vector3(edges.inner.P2.x, maxY, edges.inner.P2.z));
+                    vertices.Add(new Vector3(edges.outer.P1.x, maxY, edges.outer.P1.z));
+                    vertices.Add(new Vector3(edges.outer.P2.x, maxY, edges.outer.P2.z));
+
+                    triangles.Add(trianglesOffset + 0);
+                    triangles.Add(trianglesOffset + 1);
+                    triangles.Add(trianglesOffset + 3);
+                    triangles.Add(trianglesOffset + 0);
+                    triangles.Add(trianglesOffset + 3);
+                    triangles.Add(trianglesOffset + 2);
+
+                    trianglesOffset = vertices.Count;
+
+                    // Верхняя грань между гранями гексов
+                    if (maxY < maxEndY)
+                    {
+                        vertices.Add(new Vector3(edges.inner.P2.x, maxY, edges.inner.P2.z));
+                        vertices.Add(new Vector3(edges.outer.P2.x, maxY, edges.outer.P2.z));
+                        vertices.Add(new Vector3(edges.inner.P2.x, maxEndY, edges.inner.P2.z));
+                        vertices.Add(new Vector3(edges.outer.P2.x, maxEndY, edges.outer.P2.z));
+                    }
+                    else
+                    {
+                        vertices.Add(new Vector3(afterEdges.inner.P1.x, maxY, afterEdges.inner.P1.z));
+                        vertices.Add(new Vector3(afterEdges.outer.P1.x, maxY, afterEdges.outer.P1.z));
+                        vertices.Add(new Vector3(afterEdges.inner.P1.x, maxEndY, afterEdges.inner.P1.z));
+                        vertices.Add(new Vector3(afterEdges.outer.P1.x, maxEndY, afterEdges.outer.P1.z));
+                    }
+
+                    triangles.Add(trianglesOffset + 0);
+                    triangles.Add(trianglesOffset + 3);
+                    triangles.Add(trianglesOffset + 1);
+                    triangles.Add(trianglesOffset + 0);
+                    triangles.Add(trianglesOffset + 2);
+                    triangles.Add(trianglesOffset + 3);
+
+                    trianglesOffset = vertices.Count;
+
+                    vertices.Add(new Vector3(edges.inner.P2.x, Mathf.Max(maxEndY, maxY), edges.inner.P2.z));
+                    vertices.Add(new Vector3(edges.outer.P2.x, Mathf.Max(maxEndY, maxY), edges.outer.P2.z));
+                    vertices.Add(new Vector3(afterEdges.inner.P1.x, Mathf.Max(maxEndY, maxY), afterEdges.inner.P1.z));
+                    vertices.Add(new Vector3(afterEdges.outer.P1.x, Mathf.Max(maxEndY, maxY), afterEdges.outer.P1.z));
+
+                    triangles.Add(trianglesOffset + 0);
+                    triangles.Add(trianglesOffset + 3);
+                    triangles.Add(trianglesOffset + 1);
+                    triangles.Add(trianglesOffset + 0);
+                    triangles.Add(trianglesOffset + 2);
+                    triangles.Add(trianglesOffset + 3);
+
+                    trianglesOffset = vertices.Count;
+
+                    // Внутренняя грань
+                    vertices.Add(edges.inner.P1);
+                    vertices.Add(edges.inner.P2);
+                    vertices.Add(new Vector3(edges.inner.P1.x, maxY, edges.inner.P1.z));
+                    vertices.Add(new Vector3(edges.inner.P2.x, maxY, edges.inner.P2.z));
+
+                    triangles.Add(trianglesOffset + 0);
+                    triangles.Add(trianglesOffset + 1);
+                    triangles.Add(trianglesOffset + 3);
+                    triangles.Add(trianglesOffset + 0);
+                    triangles.Add(trianglesOffset + 3);
+                    triangles.Add(trianglesOffset + 2);
+
+                    trianglesOffset = vertices.Count;
+
+                    // Внутренняя грань между гранями гексов
+                    vertices.Add(edges.inner.P2);
+                    vertices.Add(afterEdges.inner.P1);
+                    vertices.Add(new Vector3(edges.inner.P2.x, Mathf.Max(maxEndY, maxY), edges.inner.P2.z));
+                    vertices.Add(new Vector3(afterEdges.inner.P1.x, Mathf.Max(maxEndY, maxY), afterEdges.inner.P1.z));
+
+                    triangles.Add(trianglesOffset + 0);
+                    triangles.Add(trianglesOffset + 1);
+                    triangles.Add(trianglesOffset + 3);
+                    triangles.Add(trianglesOffset + 0);
+                    triangles.Add(trianglesOffset + 3);
+                    triangles.Add(trianglesOffset + 2);
+
+
+                    trianglesOffset = vertices.Count;
+
+                    // Внешняя грань
+                    vertices.Add(new Vector3(edges.outer.P1.x, maxY, edges.outer.P1.z));
+                    vertices.Add(new Vector3(edges.outer.P2.x, maxY, edges.outer.P2.z));
+                    vertices.Add(edges.outer.P1);
+                    vertices.Add(edges.outer.P2);
+
+                    triangles.Add(trianglesOffset + 0);
+                    triangles.Add(trianglesOffset + 1);
+                    triangles.Add(trianglesOffset + 3);
+                    triangles.Add(trianglesOffset + 0);
+                    triangles.Add(trianglesOffset + 3);
+                    triangles.Add(trianglesOffset + 2);
+
+                    trianglesOffset = vertices.Count;
+
+                    // Внешняя грань между гранями гексов
+                    if (Mathf.Approximately(maxY, maxEndY))
+                    {
+                        vertices.Add(edges.outer.P2);
+                        vertices.Add(afterEdges.outer.P1);
+                        vertices.Add(new Vector3(edges.outer.P2.x, maxY, edges.outer.P2.z));
+                        vertices.Add(new Vector3(afterEdges.outer.P1.x, maxEndY, afterEdges.outer.P1.z));
+
+                        triangles.Add(trianglesOffset + 0);
+                        triangles.Add(trianglesOffset + 3);
+                        triangles.Add(trianglesOffset + 1);
+                        triangles.Add(trianglesOffset + 0);
+                        triangles.Add(trianglesOffset + 2);
+                        triangles.Add(trianglesOffset + 3);
+                    }
+
+                    trianglesOffset = vertices.Count;
+                }
             }
 
-            for (int i = 0; i < _points.Length; i++)
-            {
-                int v1 = i * 2;
-                int v2 = v1 + 1;
-                int v3 = ((i + 1) % _points.Length) * 2;
-                int v4 = v3 + 1;
-
-                triangles.Add(v1);
-                triangles.Add(v3);
-                triangles.Add(v2);
-
-                triangles.Add(v2);
-                triangles.Add(v3);
-                triangles.Add(v4);
-            }
-
-            mesh.SetVertices(vertices);
-            mesh.SetTriangles(triangles, 0);
+            mesh.vertices = vertices.ToArray();
+            mesh.triangles = triangles.ToArray();
             mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
+
             return mesh;
         }
     }
