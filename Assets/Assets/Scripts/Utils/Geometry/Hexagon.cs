@@ -3,6 +3,7 @@ using System.Linq;
 using AuroraWorld.Gameplay.World.Data;
 using UnityEngine;
 using static UnityEngine.Mathf;
+using Vector3 = UnityEngine.Vector3;
 
 namespace AuroraWorld.Gameplay.World.Geometry
 {
@@ -47,7 +48,7 @@ namespace AuroraWorld.Gameplay.World.Geometry
         }
 
         #endregion
-        
+
         public static Vector3 GetVertex(this Vector3 center, float i, float offset = 0.05f)
         {
             var angle = Deg2Rad * (60 * i + 30);
@@ -58,7 +59,7 @@ namespace AuroraWorld.Gameplay.World.Geometry
         }
 
         public static HexEntityMesh CalculateUpSideAndEdges(GeoConfiguration config, Vector3Int position,
-            HexWorldInfoProxy info)
+            HexWorldInfoProxy info, HexEntityProxy[] neighbors)
         {
             var meshData = new HexEntityMesh();
 
@@ -90,7 +91,10 @@ namespace AuroraWorld.Gameplay.World.Geometry
             {
                 var direction = (DirectionType)(i - 1);
                 var neighborPosition = position.Neighbor(direction);
-                var neighborElevation = config.GetHexagonInfo(neighborPosition.ToHex()).Elevation.Value;
+                var neighbor = neighbors.FirstOrDefault(n => n?.Position == neighborPosition);
+                var neighborElevation = neighbor != null
+                    ? neighbor.WorldInfoProxy.Elevation.Value
+                    : config.GetHexagonInfo(neighborPosition.ToHex()).Elevation.Value;
                 var neighborVertices = GetVertices(neighborPosition.CubeToWorld(neighborElevation));
                 // Внутренняя грань
                 var p1 = meshData.Vertices[i];
@@ -99,14 +103,19 @@ namespace AuroraWorld.Gameplay.World.Geometry
 
                 // Внешняя грань
                 p1 = neighborVertices[i + 1 > 3 ? i + 1 - 3 : i + 1 + 3];
-                //p1.y = neighborElevation;
                 p2 = neighborVertices[i > 3 ? i - 3 : i + 3];
-                //p2.y = neighborElevation;
                 meshData.OuterEdges[i - 1] = new Edge(position, p1, p2, direction);
+            }
 
+            for (int i = 1; i <= 6; i++)
+            {
+                var direction = (DirectionType)(i - 1);
                 // Грань
-                p1 = meshData.InnerEdges[i - 1].P1 + (meshData.InnerEdges[i - 1].P1 - p1) / 2;
-                p2 = meshData.InnerEdges[i - 1].P2 + (meshData.InnerEdges[i - 1].P2 - p2) / 2;
+                var beforeEdge = i == 1 ? 5 : i - 2;
+                var afterEdge = i == 6 ? 0 : i;
+                var p1 = GetCenter(meshData.InnerEdges[i - 1].P1, meshData.OuterEdges[i - 1].P1, meshData.OuterEdges[beforeEdge].P2);
+                var p2 = GetCenter(meshData.InnerEdges[i - 1].P2, meshData.OuterEdges[i - 1].P2, meshData.OuterEdges[afterEdge].P1);
+
                 meshData.Edges[i - 1] = new Edge(position, p1, p2, direction);
             }
 
@@ -122,6 +131,11 @@ namespace AuroraWorld.Gameplay.World.Geometry
                 }
 
                 return vertices;
+            }
+
+            Vector3 GetCenter(Vector3 a, Vector3 b, Vector3 c)
+            {
+                return (a + b + c) / 3f;
             }
         }
 
@@ -174,7 +188,7 @@ namespace AuroraWorld.Gameplay.World.Geometry
                     addedColors.Add(config.GetColor(position.ToHex()));
                     addedColors.Add(config.GetColor(position.Neighbor(outerEdge.Direction).ToHex()));
                     addedColors.Add(config.GetColor(position.Neighbor(beforeOuterEdge.Direction).ToHex()));
-                    
+
                     addedTriangles.AddRange(new[] { lastVertexIndex, lastVertexIndex + 1, lastVertexIndex + 2 });
                 }
             }

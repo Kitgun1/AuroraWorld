@@ -52,8 +52,9 @@ namespace AuroraWorld.Gameplay.World.Geometry
 
         public HexEntityProxy InitializeMesh()
         {
-            var neighborsInfoProxy = GetNeighbors().Select(p => p?.WorldInfoProxy).ToArray();
-            EntityMesh = Hexagon.CalculateUpSideAndEdges(_configuration, Position, WorldInfoProxy);
+            var neighbors = GetNeighbors();
+            var neighborsInfoProxy = neighbors.Select(p => p?.WorldInfoProxy).ToArray();
+            EntityMesh = Hexagon.CalculateUpSideAndEdges(_configuration, Position, WorldInfoProxy, neighbors);
             EntityMesh = Hexagon.CalculateHexagonBorders(_configuration, Position, EntityMesh, neighborsInfoProxy);
 
             return this;
