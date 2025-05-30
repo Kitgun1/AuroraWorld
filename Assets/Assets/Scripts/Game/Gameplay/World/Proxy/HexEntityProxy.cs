@@ -30,11 +30,21 @@ namespace AuroraWorld.Gameplay.World.Geometry
             Origin = origin;
 
             WorldInfoProxy = configuration.GetHexagonInfo(Position.ToHex());
+            Origin.WorldInfo = WorldInfoProxy.Origin;
 
             WorldInfoProxy.IsLand.Skip(1).Subscribe(isLand => Origin.WorldInfo.IsLand = isLand);
             WorldInfoProxy.Elevation.Skip(1).Subscribe(elevation => Origin.WorldInfo.Elevation = elevation);
             WorldInfoProxy.Temperature.Skip(1).Subscribe(temperature => Origin.WorldInfo.Temperature = temperature);
             WorldInfoProxy.Humidity.Skip(1).Subscribe(humidity => Origin.WorldInfo.Humidity = humidity);
+
+            WorldInfoProxy.Elevation.Skip(1).Subscribe(elevation =>
+            {
+                InitializeMesh();
+                foreach (var neighbor in _neighbors)
+                {
+                    neighbor.Value?.InitializeMesh();
+                }
+            });
         }
 
         public HexEntityProxy InitializeNeighbors(WorldStateProxy world)

@@ -11,21 +11,21 @@ namespace AuroraWorld.Gameplay.World.Geometry
         public ReactiveProperty<float> Temperature { get; }
         public ReactiveProperty<float> Humidity { get; }
 
-        private HexWorldInfo _origin;
+        public HexWorldInfo Origin;
 
         public HexWorldInfoProxy(HexWorldInfo origin)
         {
-            _origin = origin;
+            Origin = origin;
 
-            IsLand = new ReactiveProperty<bool>(_origin.IsLand);
-            Elevation = new ReactiveProperty<float>(_origin.Elevation);
-            Temperature = new ReactiveProperty<float>(_origin.Temperature);
-            Humidity = new ReactiveProperty<float>(_origin.Humidity);
+            IsLand = new ReactiveProperty<bool>(Origin.IsLand);
+            Elevation = new ReactiveProperty<float>(Origin.Elevation);
+            Temperature = new ReactiveProperty<float>(Origin.Temperature);
+            Humidity = new ReactiveProperty<float>(Origin.Humidity);
 
-            IsLand.Skip(1).Subscribe(v => _origin.IsLand = v);
-            Elevation.Skip(1).Subscribe(v => _origin.Elevation = v);
-            Temperature.Skip(1).Subscribe(v => _origin.Temperature = v);
-            Humidity.Skip(1).Subscribe(v => _origin.Humidity = v);
+            IsLand.Skip(1).Subscribe(v => Origin.IsLand = v);
+            Elevation.Skip(1).Subscribe(v => Origin.Elevation = v);
+            Temperature.Skip(1).Subscribe(v => Origin.Temperature = v);
+            Humidity.Skip(1).Subscribe(v => Origin.Humidity = v);
         }
     }
 }
