@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using AuroraWorld.Gameplay.World.Data;
 using AuroraWorld.Gameplay.World.Geometry;
 using AuroraWorld.Gameplay.World.Root;
+using AuroraWorld.Utils;
 using UnityEngine;
 using Random = System.Random;
 
@@ -13,6 +14,7 @@ namespace AuroraWorld.Gameplay.World
         private static int _seedHash;
         private static float _continentSeed;
         private static float _rivesSeed;
+        private static float _colorSeed;
         private static readonly Dictionary<BiomeType, float> BiomeSeed = new();
 
         private static bool _seedsInitialized = false;
@@ -25,6 +27,7 @@ namespace AuroraWorld.Gameplay.World
 
             _continentSeed = random.Next(-1 * (int)details, 1 * (int)details) / (details / 100);
             _rivesSeed = random.Next(-2 * (int)details, 2 * (int)details) / (details / 100);
+            _colorSeed = random.Next(-3 * (int)details, 3 * (int)details) / (details / 100);
             // _waterSeed = random.Next(-1 * (int)details, 1 * (int)details) / (details / 100);
             // _mountainsSeed = random.Next(-2 * (int)details, 2 * (int)details) / (details / 100);
             // _humiditySeed = random.Next(-4 * (int)details, 4 * (int)details) / (details / 100);
@@ -77,9 +80,13 @@ namespace AuroraWorld.Gameplay.World
         public static Color32 GetColor(this GeoConfiguration configuration, Vector2Int hex)
         {
             var height = configuration.GetElevation(hex);
+            Color32 color;
+            var gamma = (int)Mathf.Lerp(-40, 40, FBM(hex.x, hex.y, _colorSeed, 2, 1));
             if (height >= configuration.LandMinElevation)
-                return new Color32(0, 155, 0, 255);
-            return new Color32(28, 169, 201, 255);
+                color = new Color32(0, 155, 0, 255).AddGamma(gamma);
+            else color = new Color32(28, 169, 201, 255).AddGamma(gamma);
+
+            return color;
         }
 
         public static HexWorldInfoProxy GetHexagonInfo(this GeoConfiguration configuration, Vector2Int hex)
