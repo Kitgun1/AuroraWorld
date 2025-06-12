@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
-using AuroraWorld.Gameplay.World.Data;
 using AuroraWorld.Gameplay.World.Geometry;
 using AuroraWorld.Gameplay.World.Root;
-using AuroraWorld.Utils;
 using UnityEngine;
 using Random = System.Random;
 
@@ -60,7 +58,7 @@ namespace AuroraWorld.Gameplay.World
             var e = FBM(hex.x, hex.y, _continentSeed, configuration.ContinentScale, 10);
             e = e * e * e;
 
-            return Mathf.Clamp01(Mathf.Floor(e * 50) / 49);
+            return Mathf.Clamp01(Mathf.RoundToInt(e / GeometryHexagon.ELEVATION_STEP) * GeometryHexagon.ELEVATION_STEP);
         }
 
         public static float GetTemperature(this GeoConfiguration configuration, Vector2Int hex)
@@ -75,33 +73,6 @@ namespace AuroraWorld.Gameplay.World
             if (!_seedsInitialized) throw new Exception("Seed not initialized. Use SetSeed for set seed!");
 
             return Mathf.Clamp01(Mathf.Floor(1 * 50) / 49);
-        }
-
-        public static Color32 GetColor(this GeoConfiguration configuration, Vector2Int hex)
-        {
-            var height = configuration.GetElevation(hex);
-            Color32 color;
-            var gamma = (int)Mathf.Lerp(-40, 40, FBM(hex.x, hex.y, _colorSeed, 2, 1));
-            if (height >= configuration.LandMinElevation)
-                color = new Color32(0, 155, 0, 255).AddGamma(gamma);
-            else color = new Color32(28, 169, 201, 255).AddGamma(gamma);
-
-            return color;
-        }
-
-        public static HexWorldInfoProxy GetHexagonInfo(this GeoConfiguration configuration, Vector2Int hex)
-        {
-            var hexagonInfo = new HexWorldInfo();
-            var hexagonInfoProxy = new HexWorldInfoProxy(hexagonInfo);
-            var elevation = Mathf.Clamp(configuration.GetElevation(hex), 0, configuration.LandMinElevation);
-            var rivesElevation = configuration.RivesElevation(hex);
-            hexagonInfoProxy.IsLand.Value = configuration.LandMinElevation >= elevation ||
-                                            configuration.RivesMinElevation >= rivesElevation;
-            hexagonInfoProxy.Elevation.Value = elevation;
-            hexagonInfoProxy.Temperature.Value = configuration.GetTemperature(hex);
-            hexagonInfoProxy.Humidity.Value = configuration.GetHumidity(hex);
-
-            return hexagonInfoProxy;
         }
 
         /// <summary> FractionalBrownianMotion </summary>

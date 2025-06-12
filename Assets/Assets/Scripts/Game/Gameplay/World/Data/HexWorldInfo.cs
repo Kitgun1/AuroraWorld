@@ -9,5 +9,6 @@ namespace AuroraWorld.Gameplay.World.Data
         public float Elevation;
         public float Temperature;
         public float Humidity;
+        public FogOfWarHexState FogOfWarState;
     }
 }
