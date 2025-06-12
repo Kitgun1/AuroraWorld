@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using AuroraWorld.Gameplay.World;
+using AuroraWorld.Gameplay.World.Data;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -40,12 +41,12 @@ namespace Assets.Scripts.Test
         {
             var pixels = new Color32[_width * _height];
 
-            Parallel.For(0, _height, y =>
+            Parallel.For((long)0, _height, y =>
             {
-                for (int x = 0; x < _width; x++)
+                for (var x = 0; x < _width; x++)
                 {
-                    int index = y * _width + x;
-                    pixels[index] = _configuration.GetColor(new Vector2Int(x, y));
+                    var index = y * _width + x;
+                    pixels[index] = _configuration.GetColor(new Vector2Int(x, (int)y), FogOfWarHexState.Visible);
                 }
             });
             _texture.SetPixelData(pixels, 0);
