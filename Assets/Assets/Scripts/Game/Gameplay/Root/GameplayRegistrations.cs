@@ -1,8 +1,10 @@
+using AuroraWorld.Gameplay.GameplayTime;
 using AuroraWorld.Gameplay.Player;
 using AuroraWorld.Gameplay.World;
 using AuroraWorld.Gameplay.World.Geometry;
 using DI;
 using UnityEngine;
+using Time = AuroraWorld.Gameplay.GameplayTime.Time;
 
 namespace AuroraWorld.Gameplay.Root
 {
@@ -21,38 +23,48 @@ namespace AuroraWorld.Gameplay.Root
             container.RegisterInstance("ParentMeshTransform", world.transform);
 
 
-            WorldRegister(container, enterParams.WorldSeed);
-            UserRegister();
+            TimeRegister();
+            var startPosition = WorldRegister(container, enterParams.WorldSeed);
+            UserRegister(startPosition.CubeToWorld());
         }
 
-        private static void WorldRegister(DIContainer container, string seed)
+        private static Vector3Int WorldRegister(DIContainer container, string seed)
         {
             var worldState = new WorldState();
-            _worldState = new WorldStateProxy(container, worldState, seed);
+            _worldState = new WorldStateProxy(container, worldState, seed, out var startPosition);
             container.RegisterInstance(_worldState);
+            return startPosition;
+        }
+
+        private static void TimeRegister()
+        {
+            var time = new Time(0);
+            var timeProxy = new TimeProxy(time);
+            _container.RegisterInstance(timeProxy);
         }
 
         #region User Registers
 
-        private static void UserRegister()
+        private static void UserRegister(Vector3 startPosition)
         {
             var user = new GameObject("[USER]").AddComponent<User>();
-            var camera = CameraRegister(user.transform);
-            
-            var input =  new UserInput();
+            var camera = CameraRegister(user.transform, startPosition);
+
+            var input = new UserInput();
             input.Run(user, camera);
             _container.RegisterInstance(input);
-            
+
             user.Run(_container);
         }
 
-        private static Camera CameraRegister(Transform rootObject)
+        private static Camera CameraRegister(Transform rootObject, Vector3 startPosition)
         {
             var cameraObject = new GameObject("[GAME CAMERA]");
             cameraObject.transform.parent = rootObject;
             var gameplayCamera = cameraObject.AddComponent<Camera>();
-            cameraObject.transform.position = new Vector3(0, 10, -4);
-            cameraObject.transform.rotation = Quaternion.LookRotation(-cameraObject.transform.position, Vector3.up);
+            cameraObject.transform.position = new Vector3(startPosition.x, 10, startPosition.z - 4);
+            cameraObject.transform.rotation =
+                Quaternion.LookRotation(startPosition - cameraObject.transform.position, Vector3.up);
             return gameplayCamera;
         }
 
