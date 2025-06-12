@@ -1,4 +1,5 @@
 using AuroraWorld.Gameplay.Player.InputData;
+using AuroraWorld.Gameplay.World.Geometry;
 using R3;
 using UnityEngine;
 
@@ -7,7 +8,8 @@ namespace AuroraWorld.Gameplay.Player
     public class UserInput
     {
         public readonly ReactiveProperty<ClickData> ClickPosition = new();
-        public readonly Subject<MouseData> MouseMove = new();
+        public readonly Subject<MouseMoveData> MouseMove = new();
+        public readonly Subject<MouseMovedToHexagon> MouseMovedToHexagon = new();
 
         private Camera _camera;
 
@@ -30,10 +32,24 @@ namespace AuroraWorld.Gameplay.Player
                 .Subscribe(_ =>
                 {
                     oldMousePosition = Input.mousePosition;
-                    MouseMove.OnNext(new MouseData
+                    MouseMove.OnNext(new MouseMoveData
                     {
                         ScreenPosition = oldMousePosition,
                         WorldPosition = ToWorldPosition(oldMousePosition)
+                    });
+                })
+                .AddTo(monoBehaviour);
+
+            var oldHexagonPosition = Vector3Int.zero;
+            Observable.EveryUpdate()
+                .Where(_ => Input.mousePosition.WorldToHex().ToCube() != oldHexagonPosition)
+                .Subscribe(_ =>
+                {
+                    oldHexagonPosition = Input.mousePosition.WorldToHex().ToCube();
+                    MouseMovedToHexagon.OnNext(new MouseMovedToHexagon
+                    {
+                        ScreenPosition = Input.mousePosition,
+                        CubePosition = oldHexagonPosition
                     });
                 })
                 .AddTo(monoBehaviour);
