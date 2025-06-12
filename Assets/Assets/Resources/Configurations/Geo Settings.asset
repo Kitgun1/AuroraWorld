@@ -12,5 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 95105ec9541b4be7a783d84f8c9d19ed, type: 3}
   m_Name: Geo Settings
   m_EditorClassIdentifier: 
-  ContinentScale: 0
-  BiomesConfiguration: {fileID: 0}
+  ContinentScale: 0.01
+  LandMinElevation: 0.1
+  RivesScale: 0
+  RivesMinElevation: 0
+  BiomesConfiguration: {fileID: 11400000, guid: 5fd9694e139b806418a4f63043dde7bc, type: 2}
