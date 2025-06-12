@@ -7,6 +7,5 @@ namespace AuroraWorld.Gameplay.World.Geometry
     public class WorldState
     {
         public List<HexEntity> Hexagons = new();
-        public List<MergedHexEntityGroup> MergedHexagons = new();
     }
 }
