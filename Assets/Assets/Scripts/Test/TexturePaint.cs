@@ -46,7 +46,7 @@ namespace Assets.Scripts.Test
                 for (var x = 0; x < _width; x++)
                 {
                     var index = y * _width + x;
-                    pixels[index] = _configuration.GetColor(new Vector2Int(x, (int)y), FogOfWarHexState.Visible);
+                    pixels[index] = GetColor(new Vector2Int(x, (int)y));
                 }
             });
             _texture.SetPixelData(pixels, 0);
@@ -62,6 +62,22 @@ namespace Assets.Scripts.Test
 
             _texture.filterMode = FilterMode.Point;
             _texture.Apply();
+        }
+        
+        private Color32 GetColor(Vector2Int axial)
+        {
+            Color32 color;
+            
+            var elevation = _configuration.GetElevation(axial);
+            var isLand = _configuration.LandMinElevation <= elevation;
+            var humidity = _configuration.GetHumidity(axial);
+            var temperature = _configuration.GetTemperature(axial);
+            
+            if (isLand)
+                color = new Color32(0, 155, 0, 255);
+            else color = new Color32(28, 169, 201, 255);
+
+            return color;
         }
     }
 }
