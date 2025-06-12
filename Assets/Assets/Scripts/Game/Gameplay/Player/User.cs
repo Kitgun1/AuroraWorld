@@ -1,4 +1,7 @@
+using System.Collections.Generic;
+using System.Linq;
 using Assets.Utils.Coroutine;
+using AuroraWorld.Gameplay.World.Data;
 using AuroraWorld.Gameplay.World.Geometry;
 using DI;
 using R3;
@@ -9,40 +12,51 @@ namespace AuroraWorld.Gameplay.Player
     public class User : MonoBehaviour
     {
         private UserInput _input;
+        private HexMapSelections _mapSelections;
         private DIContainer _container;
-            
+
+        private UserSettings _userSettings;
+
         public void Run(DIContainer container)
         {
+            _userSettings = new UserSettings();
+            _mapSelections = new HexMapSelections();
             _input = container.Resolve<UserInput>();
             _container = container;
 
-            var outlineObject = new GameObject("Outline");
-            //_outlineMeshFilter = outlineObject.AddComponent<MeshFilter>();
-            outlineObject.AddComponent<MeshRenderer>().material = Resources.Load<Material>("Vertex Material");
-            //_outlineThickLineMesh = new ThickLineMesh(0.1f);
-            
+            var selectionSettings = _userSettings.SelectionSettings;
+
             _input.ClickPosition.Skip(1).Subscribe(data =>
             {
                 var hexagonPosition = data.WorldPosition.WorldToHex().ToCube();
                 var worldProxy = container.Resolve<WorldStateProxy>();
                 var changeValue = data.MouseButton switch
                 {
-                    0 => 0.02f,
-                    1 => -0.02f,
+                    0 => GeometryHexagon.ELEVATION_STEP,
+                    1 => -GeometryHexagon.ELEVATION_STEP,
                     _ => 0
                 };
-                worldProxy.Hexagons[hexagonPosition].WorldInfoProxy.Elevation.Value += changeValue;
-                worldProxy.AttachHexagon(hexagonPosition);
+                var attachedHexagon = worldProxy.Hexagons.GetValueOrDefault(hexagonPosition);
+                if (attachedHexagon != null)
+                {
+                    attachedHexagon.WorldInfoProxy.Elevation.Value += changeValue;
+                    worldProxy.WorldTerrain.AttachHexagon(hexagonPosition);
+                }
             });
             _input.ClickPosition.Skip(1).Subscribe(data =>
             {
-                if(data.MouseButton != 2) return;
+                // selection
+                if (data.MouseButton != 2) return;
                 var hexagonPosition = data.WorldPosition.WorldToHex().ToCube();
                 var worldProxy = container.Resolve<WorldStateProxy>();
-                /*_selectedHexagons.Add(worldProxy.Hexagons[hexagonPosition]);
-                _outlineThickLineMesh.Construct(_selectedHexagons.ToArray());
-                _outlineMeshFilter.mesh = _outlineThickLineMesh.Mesh;*/
+                var positionsInRange = CubeMath.Range(hexagonPosition, selectionSettings.Range.Value);
+                var hexagons = positionsInRange
+                    .Select(p => worldProxy.Hexagons.GetValueOrDefault(p))
+                    .Where(h => h != null)
+                    .ToArray();
+                _mapSelections.AttachSelection("selected", selectionSettings, hexagons);
             });
+            _input.MouseMovedToHexagon.Skip(1).Subscribe(data => { });
         }
     }
 }
