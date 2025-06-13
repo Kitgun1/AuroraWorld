@@ -137,13 +137,14 @@ namespace AuroraWorld.Gameplay.World.Geometry
             // Треугольники и цвета лицевой стороны
             hexMesh.Triangles = new int[18];
             hexMesh.Colors = new Color[vertexes.Length];
+            hexMesh.Colors[0] = info.GetBiomeColor(cube.GetHashCode());
             for (var i = 0; i < 6; i++)
             {
                 hexMesh.Triangles[i * 3 + 0] = i + 2 > 6 ? 1 : i + 2;
                 hexMesh.Triangles[i * 3 + 1] = i + 1;
                 hexMesh.Triangles[i * 3 + 2] = 0;
 
-                hexMesh.Colors[i] = info.GetBiomeColor(cube.GetHashCode());
+                hexMesh.Colors[i + 1] = info.GetBiomeColor(cube.GetHashCode());
             }
 
             return hexMesh;
@@ -191,7 +192,7 @@ namespace AuroraWorld.Gameplay.World.Geometry
             }
 
             // Углы: Строим только через 1
-            for (var i = 1; i < mesh.InnerEdges.Length; i += 2)
+            for (var i = 0; i < mesh.InnerEdges.Length / 2; i += 1)
             {
                 var lastVertexIndex = mesh.Vertices.Length + addedVertices.Count;
                 var innerEdge = mesh.InnerEdges[i];
@@ -232,8 +233,6 @@ namespace AuroraWorld.Gameplay.World.Geometry
             var triangles = mesh.Triangles.ToList();
             triangles.AddRange(addedTriangles);
             mesh.Triangles = triangles.ToArray();
-
-            return;
         }
     }
 }
