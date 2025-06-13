@@ -8,8 +8,8 @@ namespace AuroraWorld.Gameplay.World.Geometry
     public class HexEntityProxy
     {
         public Vector3Int Position { get; }
-        public Vector3Int ChunkPosition => ChunkConverters.CubeToChunk(Position);
-        public Vector3Int LocalInChunkPosition => ChunkConverters.CubeToLocalCube(Position);
+        public Vector3Int ChunkPosition => ChunkUtils.CubeToChunk(Position);
+        public Vector3Int LocalInChunkPosition => ChunkUtils.CubeToLocalCube(Position);
 
         public HexEntityMesh HexMesh;
         public HexWorldInfoProxy WorldInfoProxy { get; }
