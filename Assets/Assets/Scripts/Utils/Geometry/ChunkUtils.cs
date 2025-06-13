@@ -1,8 +1,9 @@
+using System.Linq;
 using UnityEngine;
 
 namespace AuroraWorld.Gameplay.World.Geometry
 {
-    public static class ChunkConverters
+    public static class ChunkUtils
     {
         public const int CHUNK_RADIUS = 8;
 
@@ -30,6 +31,11 @@ namespace AuroraWorld.Gameplay.World.Geometry
             var yh = Div(cube.z + shift * cube.y, area);
             var zh = Div(cube.x + shift * cube.z, area);
             return new Vector3Int(xh, yh, zh);
+        }
+
+        public static Vector3Int[] GetModifiedChunks(params Vector3Int[] cubes)
+        {
+            return cubes.GroupBy(i => CubeToChunk(i)).Select(g => g.Key).ToArray();
         }
 
         private static int Div(int x, int y) => Mathf.FloorToInt(x / (float)y);
