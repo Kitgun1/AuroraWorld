@@ -12,7 +12,7 @@ namespace AuroraWorld.Gameplay.World.Geometry
         public ReactiveProperty<float> Elevation { get; }
         public ReactiveProperty<float> Temperature { get; }
         public ReactiveProperty<float> Humidity { get; }
-        public ReactiveProperty<FogOfWarHexState> FogOfWarState { get; }
+        public ReactiveProperty<FogOfWarState> FogOfWarState { get; }
 
         public HexWorldInfo Origin;
 
@@ -24,7 +24,7 @@ namespace AuroraWorld.Gameplay.World.Geometry
             Elevation = new ReactiveProperty<float>(Origin.Elevation);
             Temperature = new ReactiveProperty<float>(Origin.Temperature);
             Humidity = new ReactiveProperty<float>(Origin.Humidity);
-            FogOfWarState = new ReactiveProperty<FogOfWarHexState>(Origin.FogOfWarState);
+            FogOfWarState = new ReactiveProperty<FogOfWarState>(Origin.FogOfWarState);
 
             IsLand.Skip(1).Subscribe(v => Origin.IsLand = v);
             Elevation.Skip(1).Subscribe(v =>
@@ -47,9 +47,9 @@ namespace AuroraWorld.Gameplay.World.Geometry
             else color = new Color32(28, 169, 201, 255).AddGamma(gamma);
             color.a = FogOfWarState.Value switch
             {
-                FogOfWarHexState.Visible => 255,
-                FogOfWarHexState.Visited => 70,
-                FogOfWarHexState.Hidden => 0,
+                Data.FogOfWarState.Visible => 255,
+                Data.FogOfWarState.Visited => 70,
+                Data.FogOfWarState.Hidden => 0,
                 _ => throw new ArgumentOutOfRangeException(nameof(FogOfWarState), FogOfWarState.Value, null)
             };
 

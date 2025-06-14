@@ -19,7 +19,7 @@ namespace AuroraWorld.Gameplay.World
             _geo = geo;
         }
 
-        public HexWorldInfoProxy GetHexagonInfo(Vector3Int cube, FogOfWarHexState fogState = FogOfWarHexState.Hidden)
+        public HexWorldInfoProxy GetHexagonInfo(Vector3Int cube, FogOfWarState defaultFogState = FogOfWarState.Hidden)
         {
             var info = _worldStateProxy.Hexagons.GetValueOrDefault(cube)?.WorldInfoProxy;
             if (info != null) return info;
@@ -32,7 +32,7 @@ namespace AuroraWorld.Gameplay.World
             hexagonInfoProxy.IsLand.Value = _geo.LandMinElevation <= elevation;
             hexagonInfoProxy.Humidity.Value = _geo.GetHumidity(axial);
             hexagonInfoProxy.Temperature.Value = _geo.GetTemperature(axial);
-            hexagonInfoProxy.FogOfWarState.Value = fogState;
+            hexagonInfoProxy.FogOfWarState.Value = defaultFogState;
 
             return hexagonInfoProxy;
         }

@@ -1,9 +1,10 @@
 namespace AuroraWorld.Gameplay.World.Data
 {
-    public enum FogOfWarHexState
+    public enum FogOfWarState
     {
+        None,
         Visible,
         Visited,
-        Hidden
+        Hidden,
     }
 }
