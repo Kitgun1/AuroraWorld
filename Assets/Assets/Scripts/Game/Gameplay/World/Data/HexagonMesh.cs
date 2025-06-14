@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace AuroraWorld.Gameplay.World.Data
 {
-    public class HexEntityMesh
+    public class HexagonMesh
     {
         public Vector3[] Vertices;
         public Color32[] Colors;

@@ -54,12 +54,12 @@ namespace AuroraWorld.Gameplay.World.Geometry
 
         #region Geometry
 
-        public static void CalculateEdges(HexEntityMesh hexEntityMesh, Vector3Int cube, WorldTerrain terrain)
+        public static void CalculateEdges(HexagonMesh hexagonMesh, Vector3Int cube, Terrain terrain)
         {
             // Грани
-            hexEntityMesh.InnerEdges = new Edge[6];
-            hexEntityMesh.Edges = new Edge[6];
-            hexEntityMesh.OuterEdges = new Edge[6];
+            hexagonMesh.InnerEdges = new Edge[6];
+            hexagonMesh.Edges = new Edge[6];
+            hexagonMesh.OuterEdges = new Edge[6];
 
             for (var i = 1; i <= 6; i++)
             {
@@ -69,14 +69,14 @@ namespace AuroraWorld.Gameplay.World.Geometry
                 var neighborVertices = GetVertices(neighborPosition.CubeToWorld(neighborElevation));
 
                 // Внутренняя грань
-                var innerP1 = hexEntityMesh.Vertices[i];
-                var innerP2 = hexEntityMesh.Vertices[i == 6 ? 1 : i + 1];
-                hexEntityMesh.InnerEdges[i - 1] = new Edge(cube, innerP1, innerP2, direction);
+                var innerP1 = hexagonMesh.Vertices[i];
+                var innerP2 = hexagonMesh.Vertices[i == 6 ? 1 : i + 1];
+                hexagonMesh.InnerEdges[i - 1] = new Edge(cube, innerP1, innerP2, direction);
 
                 // Внешняя грань
                 var outerP1 = neighborVertices[i + 1 > 3 ? i + 1 - 3 : i + 1 + 3];
                 var outerP2 = neighborVertices[i > 3 ? i - 3 : i + 3];
-                hexEntityMesh.OuterEdges[i - 1] = new Edge(cube, outerP1, outerP2, direction);
+                hexagonMesh.OuterEdges[i - 1] = new Edge(cube, outerP1, outerP2, direction);
             }
 
             for (var i = 1; i <= 6; i++)
@@ -85,12 +85,15 @@ namespace AuroraWorld.Gameplay.World.Geometry
                 // Средняя грань
                 var beforeEdge = i == 1 ? 5 : i - 2;
                 var afterEdge = i == 6 ? 0 : i;
-                var p1 = GetCenter(hexEntityMesh.InnerEdges[i - 1].P1, hexEntityMesh.OuterEdges[i - 1].P1,
-                    hexEntityMesh.OuterEdges[beforeEdge].P2);
-                var p2 = GetCenter(hexEntityMesh.InnerEdges[i - 1].P2, hexEntityMesh.OuterEdges[i - 1].P2,
-                    hexEntityMesh.OuterEdges[afterEdge].P1);
+                var p1 = GetCenter(hexagonMesh.InnerEdges[i - 1].P1,
+                    hexagonMesh.OuterEdges[i - 1].P1,
+                    hexagonMesh.OuterEdges[beforeEdge].P2);
+                
+                var p2 = GetCenter(hexagonMesh.InnerEdges[i - 1].P2,
+                    hexagonMesh.OuterEdges[i - 1].P2,
+                    hexagonMesh.OuterEdges[afterEdge].P1);
 
-                hexEntityMesh.Edges[i - 1] = new Edge(cube, p1, p2, direction);
+                hexagonMesh.Edges[i - 1] = new Edge(cube, p1, p2, direction);
             }
 
             return;
@@ -121,9 +124,9 @@ namespace AuroraWorld.Gameplay.World.Geometry
 
         #endregion
 
-        public static HexEntityMesh InstanceUpSideMesh(Vector3Int cube, HexWorldInfoProxy info)
+        public static HexagonMesh InstanceUpSideMesh(Vector3Int cube, HexagonWorldInfoProxy info)
         {
-            var hexMesh = new HexEntityMesh();
+            var hexMesh = new HexagonMesh();
 
             var worldCenter = cube.CubeToWorld(info.Elevation.Value);
 
@@ -158,7 +161,7 @@ namespace AuroraWorld.Gameplay.World.Geometry
             }
         }
 
-        public static void InstanceBorders(Vector3Int position, HexEntityMesh mesh, WorldTerrain terrain)
+        public static void InstanceBorders(Vector3Int position, HexagonMesh mesh, Terrain terrain)
         {
             var baseColor = mesh.Colors[0];
             var addedVertices = new List<Vector3>();

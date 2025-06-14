@@ -10,7 +10,7 @@ namespace AuroraWorld.Gameplay.Player
     public class User : MonoBehaviour
     {
         private UserInput _input;
-        private HexMapSelections _mapSelections;
+        private HexagonMapSelections _mapSelections;
         private DIContainer _container;
 
         private UserSettings _userSettings;
@@ -18,7 +18,7 @@ namespace AuroraWorld.Gameplay.Player
         public void Run(DIContainer container)
         {
             _userSettings = new UserSettings();
-            _mapSelections = new HexMapSelections();
+            _mapSelections = new HexagonMapSelections();
             _input = container.Resolve<UserInput>();
             _container = container;
 
@@ -38,7 +38,7 @@ namespace AuroraWorld.Gameplay.Player
                 if (attachedHexagon != null)
                 {
                     attachedHexagon.WorldInfoProxy.Elevation.Value += changeValue;
-                    worldProxy.WorldTerrain.AttachChunkMesh(hexagonPosition);
+                    worldProxy.Terrain.AttachChunkMesh(hexagonPosition);
                 }
             });
             _input.ClickPosition.Skip(1).Subscribe(data =>
@@ -52,7 +52,7 @@ namespace AuroraWorld.Gameplay.Player
                     .Select(p => worldProxy.Hexagons.GetValueOrDefault(p))
                     .Where(h => h != null)
                     .ToArray();
-                _mapSelections.AttachSelection("selected", selectionSettings, worldProxy.WorldTerrain, hexagons);
+                _mapSelections.AttachSelection("selected", selectionSettings, worldProxy.Terrain, hexagons);
             });
             _input.MouseMovedToHexagon.Skip(1).Subscribe(data => { });
         }

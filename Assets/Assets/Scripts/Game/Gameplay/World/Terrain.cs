@@ -8,36 +8,36 @@ using UnityEngine;
 
 namespace AuroraWorld.Gameplay.World
 {
-    public class WorldTerrain
+    public class Terrain
     {
         private readonly WorldStateProxy _worldStateProxy;
         private readonly GeoConfiguration _geo;
 
-        public WorldTerrain(WorldStateProxy worldStateProxy, GeoConfiguration geo)
+        public Terrain(WorldStateProxy worldStateProxy, GeoConfiguration geo)
         {
             _worldStateProxy = worldStateProxy;
             _geo = geo;
         }
 
-        public HexWorldInfoProxy GetHexagonInfo(Vector3Int cube, FogOfWarState defaultFogState = FogOfWarState.Hidden)
+        public HexagonWorldInfoProxy GetHexagonInfo(Vector3Int cube, FogOfWarState defaultState = FogOfWarState.Hidden)
         {
             var info = _worldStateProxy.Hexagons.GetValueOrDefault(cube)?.WorldInfoProxy;
             if (info != null) return info;
             var axial = cube.ToHex();
 
             var elevation = _geo.GetElevation(axial);
-            var hexagonInfo = new HexWorldInfo();
-            var hexagonInfoProxy = new HexWorldInfoProxy(hexagonInfo);
+            var hexagonInfo = new HexagonWorldInfo();
+            var hexagonInfoProxy = new HexagonWorldInfoProxy(hexagonInfo);
             hexagonInfoProxy.Elevation.Value = elevation;
             hexagonInfoProxy.IsLand.Value = _geo.LandMinElevation <= elevation;
             hexagonInfoProxy.Humidity.Value = _geo.GetHumidity(axial);
             hexagonInfoProxy.Temperature.Value = _geo.GetTemperature(axial);
-            hexagonInfoProxy.FogOfWarState.Value = defaultFogState;
+            hexagonInfoProxy.FogOfWarState.Value = defaultState;
 
             return hexagonInfoProxy;
         }
 
-        public HexEntityProxy AttachHexagon(Vector3Int cube, out HashSet<Vector3Int> modifiedChunks, FogOfWarState fogState = FogOfWarState.None)
+        public HexagonProxy AttachHexagon(Vector3Int cube, out HashSet<Vector3Int> modifiedChunks, FogOfWarState fogState = FogOfWarState.None)
         {
             var hexEntityProxy = _worldStateProxy.Hexagons.GetValueOrDefault(cube);
             modifiedChunks = new HashSet<Vector3Int>();
@@ -49,8 +49,8 @@ namespace AuroraWorld.Gameplay.World
 
             if (fogState == FogOfWarState.None) fogState = FogOfWarState.Hidden;
 
-            var hexagonEntity = new HexEntity(cube);
-            hexEntityProxy = new HexEntityProxy(hexagonEntity, GetHexagonInfo(cube, fogState));
+            var hexagonEntity = new Hexagon(cube);
+            hexEntityProxy = new HexagonProxy(hexagonEntity, GetHexagonInfo(cube, fogState));
             modifiedChunks.Add(ChunkUtils.CubeToChunk(cube));
             if (fogState != FogOfWarState.Hidden)
             {
@@ -59,8 +59,8 @@ namespace AuroraWorld.Gameplay.World
                 {
                     modifiedChunks.Add(ChunkUtils.CubeToChunk(neighborPosition));
                     if (ContainsHexagon(neighborPosition)) continue;
-                    var neighborHexagon = new HexEntity(neighborPosition);
-                    var neighborProxy = new HexEntityProxy(neighborHexagon, GetHexagonInfo(neighborPosition));
+                    var neighborHexagon = new Hexagon(neighborPosition);
+                    var neighborProxy = new HexagonProxy(neighborHexagon, GetHexagonInfo(neighborPosition));
                     neighborProxy.WorldInfoProxy.Elevation.Skip(1).Subscribe(v => ElevationModified(neighborProxy, v));
                     neighborProxy.WorldInfoProxy.IsLand.Skip(1).Subscribe(v => LandStateModified(neighborProxy, v));
                     neighborProxy.WorldInfoProxy.FogOfWarState.Skip(1).Subscribe(v => FogOfWarModified(neighborProxy, v));
@@ -77,7 +77,7 @@ namespace AuroraWorld.Gameplay.World
             _worldStateProxy.Hexagons.Add(cube, hexEntityProxy);
             return hexEntityProxy;
 
-            void ElevationModified(HexEntityProxy entityProxy, float elevation)
+            void ElevationModified(HexagonProxy entityProxy, float elevation)
             {
                 Debug.Log($"update chunk");
                 var changedChunks = ChunkUtils.GetModifiedChunks(entityProxy.Position.Neighbors());
@@ -107,7 +107,7 @@ namespace AuroraWorld.Gameplay.World
                 // TODO: Обновляем весь чанк
             }
 
-            void LandStateModified(HexEntityProxy entityProxy, bool isLand)
+            void LandStateModified(HexagonProxy entityProxy, bool isLand)
             {
                 return;
                 var neighborsPosition = hexEntityProxy.Position.Neighbors();
@@ -130,7 +130,7 @@ namespace AuroraWorld.Gameplay.World
                 // TODO: Обновляем весь чанк
             }
 
-            void FogOfWarModified(HexEntityProxy entityProxy, FogOfWarState state)
+            void FogOfWarModified(HexagonProxy entityProxy, FogOfWarState state)
             {
                 var neighborsPosition = entityProxy.Position.Neighbors();
                 var changedChunks = new HashSet<Vector3Int>();

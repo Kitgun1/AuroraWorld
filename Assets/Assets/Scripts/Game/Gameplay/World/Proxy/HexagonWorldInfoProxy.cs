@@ -1,12 +1,11 @@
 using System;
 using AuroraWorld.Gameplay.World.Data;
-using AuroraWorld.Utils;
 using R3;
 using UnityEngine;
 
 namespace AuroraWorld.Gameplay.World.Geometry
 {
-    public class HexWorldInfoProxy
+    public class HexagonWorldInfoProxy
     {
         public ReactiveProperty<bool> IsLand { get; }
         public ReactiveProperty<float> Elevation { get; }
@@ -14,9 +13,9 @@ namespace AuroraWorld.Gameplay.World.Geometry
         public ReactiveProperty<float> Humidity { get; }
         public ReactiveProperty<FogOfWarState> FogOfWarState { get; }
 
-        public HexWorldInfo Origin;
+        public HexagonWorldInfo Origin;
 
-        public HexWorldInfoProxy(HexWorldInfo origin)
+        public HexagonWorldInfoProxy(HexagonWorldInfo origin)
         {
             Origin = origin;
 

@@ -7,18 +7,18 @@ namespace Assets.Scripts.Utils
 {
     public static class HexagonGroupUtils
     {
-        public static List<List<HexEntityProxy>> GroupConnectedHexagons(IEnumerable<HexEntityProxy> hexagons, WorldTerrain worldTerrain)
+        public static List<List<HexagonProxy>> GroupByConnected(IEnumerable<HexagonProxy> hexagons, Terrain terrain)
         {
-            var allHexagons = new HashSet<HexEntityProxy>(hexagons);
-            var visited = new HashSet<HexEntityProxy>();
-            var groups = new List<List<HexEntityProxy>>();
+            var allHexagons = new HashSet<HexagonProxy>(hexagons);
+            var visited = new HashSet<HexagonProxy>();
+            var groups = new List<List<HexagonProxy>>();
 
             foreach (var hexagon in allHexagons)
             {
                 if (!visited.Contains(hexagon))
                 {
-                    var group = new List<HexEntityProxy>();
-                    var queue = new Queue<HexEntityProxy>();
+                    var group = new List<HexagonProxy>();
+                    var queue = new Queue<HexagonProxy>();
                     queue.Enqueue(hexagon);
                     visited.Add(hexagon);
 
@@ -28,7 +28,7 @@ namespace Assets.Scripts.Utils
                         group.Add(current);
 
                         var neighbors = current.Position.Neighbors()
-                            .Select(i => worldTerrain.ContainsHexagon(i) ? worldTerrain.AttachHexagon(i, out _) : null)
+                            .Select(i => terrain.ContainsHexagon(i) ? terrain.AttachHexagon(i, out _) : null)
                             .Where(i => i != null)
                             .ToArray();
                         foreach (var neighbor in neighbors)

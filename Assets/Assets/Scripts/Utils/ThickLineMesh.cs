@@ -10,16 +10,16 @@ namespace Assets.Utils.Coroutine
         private (Edge inner, Edge center, Edge outer)?[][] _lines;
 
         public Mesh Mesh { get; private set; }
-        public HexEntityProxy[] SelectedHexagons { get; private set; } = { };
+        public HexagonProxy[] SelectedHexagons { get; private set; } = { };
 
-        public void AttachMesh(HexEntityProxy[] selectedHexes)
+        public void AttachMesh(HexagonProxy[] selectedHexes)
         {
             SelectedHexagons = selectedHexes;
             _lines = GeneratePath(selectedHexes);
             Mesh = GenerateMesh();
         }
 
-        private (Edge inner, Edge center, Edge outer)?[][] GeneratePath(HexEntityProxy[] selectedHexes)
+        private (Edge inner, Edge center, Edge outer)?[][] GeneratePath(HexagonProxy[] selectedHexes)
         {
             selectedHexes = selectedHexes.GroupBy(h => h.Position).Select(g => g.First()).ToArray();
 

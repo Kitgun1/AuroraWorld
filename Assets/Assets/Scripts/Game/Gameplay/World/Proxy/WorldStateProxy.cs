@@ -10,40 +10,40 @@ namespace AuroraWorld.Gameplay.World.Geometry
     public class WorldStateProxy
     {
         private readonly Transform _parentMesh;
-        public ObservableDictionary<Vector3Int, HexEntityProxy> Hexagons { get; } = new();
+        public ObservableDictionary<Vector3Int, HexagonProxy> Hexagons { get; } = new();
 
         public WorldState Origin;
-        public readonly WorldTerrain WorldTerrain;
+        public readonly Terrain Terrain;
         public readonly Dictionary<Vector3Int, ChunkMeshData> Chunks = new();
 
         public WorldStateProxy(DIContainer container, WorldState origin, string seed, out Vector3Int startPosition)
         {
             Origin = origin;
             _parentMesh = container.Resolve<Transform>("ParentMeshTransform");
-            WorldTerrain = new WorldTerrain(this, container.Resolve<GeoConfiguration>());
+            Terrain = new Terrain(this, container.Resolve<GeoConfiguration>());
             Geography.SetSeed(seed);
 
             Origin.Hexagons.ForEach(h =>
             {
                 // TODO: Init neighbors
-                Hexagons.Add(h.Position, new HexEntityProxy(h, WorldTerrain.GetHexagonInfo(h.Position)));
+                Hexagons.Add(h.Position, new HexagonProxy(h, Terrain.GetHexagonInfo(h.Position)));
             });
 
             Hexagons.ObserveAdd().Subscribe(e => Origin.Hexagons.Add(e.Value.Value.Origin));
             Hexagons.ObserveRemove().Subscribe(e => Origin.Hexagons.Remove(e.Value.Value.Origin));
 
-            startPosition = WorldTerrain.FindLand();
+            startPosition = Terrain.FindLand();
             var rangeVisible = CubeMath.Range(startPosition, 8);
             var chunkUpdated = new HashSet<Vector3Int>();
             foreach (var hexagonPosition in rangeVisible)
             {
-                WorldTerrain.AttachHexagon(hexagonPosition, out var modifiedChunks, FogOfWarState.Visible);
+                Terrain.AttachHexagon(hexagonPosition, out var modifiedChunks, FogOfWarState.Visible);
                 foreach (var modifiedChunk in modifiedChunks) chunkUpdated.Add(modifiedChunk);
             }
 
             foreach (var chunkPosition in chunkUpdated)
             {
-                WorldTerrain.AttachChunkMesh(chunkPosition);
+                Terrain.AttachChunkMesh(chunkPosition);
             }
         }
 

@@ -3,7 +3,7 @@ using System;
 namespace AuroraWorld.Gameplay.World.Data
 {
     [Serializable]
-    public class HexWorldInfo
+    public class HexagonWorldInfo
     {
         public bool IsLand;
         public float Elevation;

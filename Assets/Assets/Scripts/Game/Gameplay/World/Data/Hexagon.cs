@@ -5,12 +5,12 @@ using UnityEngine;
 namespace AuroraWorld.Gameplay.World.Geometry
 {
     [Serializable]
-    public class HexEntity
+    public class Hexagon
     {
         public Vector3Int Position;
-        public HexWorldInfo WorldInfo;
+        public HexagonWorldInfo WorldInfo;
 
-        public HexEntity(Vector3Int position)
+        public Hexagon(Vector3Int position)
         {
             Position = position;
         }
