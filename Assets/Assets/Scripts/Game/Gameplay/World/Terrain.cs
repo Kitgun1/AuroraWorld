@@ -43,7 +43,11 @@ namespace AuroraWorld.Gameplay.World
             modifiedChunks = new HashSet<Vector3Int>();
             if (hexEntityProxy != null)
             {
-                if (fogState != FogOfWarState.None) hexEntityProxy.WorldInfoProxy.FogOfWarState.Value = fogState;
+                if (fogState != FogOfWarState.None && hexEntityProxy.WorldInfoProxy.FogOfWarState.Value != fogState)
+                {
+                    hexEntityProxy.WorldInfoProxy.FogOfWarState.Value = fogState;
+                    modifiedChunks.Add(hexEntityProxy.ChunkPosition);
+                }
                 return hexEntityProxy;
             }
 
@@ -51,7 +55,8 @@ namespace AuroraWorld.Gameplay.World
 
             var hexagonEntity = new Hexagon(cube);
             hexEntityProxy = new HexagonProxy(hexagonEntity, GetHexagonInfo(cube, fogState));
-            modifiedChunks.Add(ChunkUtils.CubeToChunk(cube));
+            _worldStateProxy.Hexagons.Add(cube, hexEntityProxy);
+            modifiedChunks.Add(hexEntityProxy.ChunkPosition);
             if (fogState != FogOfWarState.Hidden)
             {
                 var neighbors = hexEntityProxy.Position.Neighbors();
@@ -74,7 +79,6 @@ namespace AuroraWorld.Gameplay.World
             hexEntityProxy.WorldInfoProxy.IsLand.Skip(1).Subscribe(v => LandStateModified(hexEntityProxy, v));
             hexEntityProxy.WorldInfoProxy.FogOfWarState.Skip(1).Subscribe(v => FogOfWarModified(hexEntityProxy, v));
 
-            _worldStateProxy.Hexagons.Add(cube, hexEntityProxy);
             return hexEntityProxy;
 
             void ElevationModified(HexagonProxy entityProxy, float elevation)
@@ -136,11 +140,9 @@ namespace AuroraWorld.Gameplay.World
                 var changedChunks = new HashSet<Vector3Int>();
                 foreach (var neighborPosition in neighborsPosition)
                 {
-                    var neighbor = _worldStateProxy.Hexagons.GetValueOrDefault(neighborPosition);
-                    if (neighbor == null)
+                    if (ContainsHexagon(neighborPosition))
                     {
-                        AttachHexagon(neighborPosition, out var modifiedChunks);
-                        foreach (var modifiedChunk in modifiedChunks) changedChunks.Add(modifiedChunk);
+                        changedChunks.Add(ChunkUtils.CubeToChunk(neighborPosition));
                     }
                 }
 
@@ -186,8 +188,8 @@ namespace AuroraWorld.Gameplay.World
             newMesh.triangles = triangles.ToArray();
 
             newMesh.RecalculateNormals();
-            _worldStateProxy.Chunks[chunkPosition].Collider.sharedMesh = newMesh;
             _worldStateProxy.Chunks[chunkPosition].Filter.mesh = newMesh;
+            _worldStateProxy.Chunks[chunkPosition].Collider.sharedMesh = newMesh;
         }
 
         public Vector3Int FindLand()
