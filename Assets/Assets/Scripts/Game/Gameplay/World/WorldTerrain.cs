@@ -37,96 +37,141 @@ namespace AuroraWorld.Gameplay.World
             return hexagonInfoProxy;
         }
 
-        public HexEntityProxy AttachHexagon(Vector3Int cube, FogOfWarHexState fogState = FogOfWarHexState.Hidden)
+        public HexEntityProxy AttachHexagon(Vector3Int cube, out HashSet<Vector3Int> modifiedChunks, FogOfWarState fogState = FogOfWarState.None)
         {
-            // Создаем меш чанка, если его нет
-            var chunkPosition = ChunkConverters.CubeToChunk(cube);
-            if (!_worldStateProxy.Chunks.ContainsKey(chunkPosition))
+            var hexEntityProxy = _worldStateProxy.Hexagons.GetValueOrDefault(cube);
+            modifiedChunks = new HashSet<Vector3Int>();
+            if (hexEntityProxy != null)
             {
-                _worldStateProxy.InstanceChunkObject(chunkPosition);
+                if (fogState != FogOfWarState.None) hexEntityProxy.WorldInfoProxy.FogOfWarState.Value = fogState;
+                return hexEntityProxy;
             }
 
-            // Добавляем данные, если шестиугольник новый
-            var hexagonEntityProxy = _worldStateProxy.Hexagons.GetValueOrDefault(cube);
-            if (!_worldStateProxy.Hexagons.ContainsKey(cube))
-            {
-                var hexagonEntity = new HexEntity(cube);
-                hexagonEntityProxy = new HexEntityProxy(hexagonEntity, GetHexagonInfo(cube, fogState));
+            if (fogState == FogOfWarState.None) fogState = FogOfWarState.Hidden;
 
-                // Обработка изменений
-                hexagonEntityProxy.WorldInfoProxy.Elevation.Skip(1).Subscribe(v =>
+            var hexagonEntity = new HexEntity(cube);
+            hexEntityProxy = new HexEntityProxy(hexagonEntity, GetHexagonInfo(cube, fogState));
+            modifiedChunks.Add(ChunkUtils.CubeToChunk(cube));
+            if (fogState != FogOfWarState.Hidden)
+            {
+                var neighbors = hexEntityProxy.Position.Neighbors();
+                foreach (var neighborPosition in neighbors)
                 {
-                    var info = hexagonEntityProxy.WorldInfoProxy;
-                    var oldIsLand = info.IsLand.Value;
-                    info.IsLand.Value = !hexagonEntityProxy.Position.Neighbors()
+                    modifiedChunks.Add(ChunkUtils.CubeToChunk(neighborPosition));
+                    if (ContainsHexagon(neighborPosition)) continue;
+                    var neighborHexagon = new HexEntity(neighborPosition);
+                    var neighborProxy = new HexEntityProxy(neighborHexagon, GetHexagonInfo(neighborPosition));
+                    neighborProxy.WorldInfoProxy.Elevation.Skip(1).Subscribe(v => ElevationModified(neighborProxy, v));
+                    neighborProxy.WorldInfoProxy.IsLand.Skip(1).Subscribe(v => LandStateModified(neighborProxy, v));
+                    neighborProxy.WorldInfoProxy.FogOfWarState.Skip(1).Subscribe(v => FogOfWarModified(neighborProxy, v));
+                    _worldStateProxy.Hexagons.Add(neighborPosition, neighborProxy);
+                }
+            }
+
+            // Обработка изменений 
+            // TODO: Привязать к тикам
+            hexEntityProxy.WorldInfoProxy.Elevation.Skip(1).Subscribe(v => ElevationModified(hexEntityProxy, v));
+            hexEntityProxy.WorldInfoProxy.IsLand.Skip(1).Subscribe(v => LandStateModified(hexEntityProxy, v));
+            hexEntityProxy.WorldInfoProxy.FogOfWarState.Skip(1).Subscribe(v => FogOfWarModified(hexEntityProxy, v));
+
+            _worldStateProxy.Hexagons.Add(cube, hexEntityProxy);
+            return hexEntityProxy;
+
+            void ElevationModified(HexEntityProxy entityProxy, float elevation)
+            {
+                Debug.Log($"update chunk");
+                var changedChunks = ChunkUtils.GetModifiedChunks(entityProxy.Position.Neighbors());
+                foreach (var chunk in changedChunks)
+                {
+                    AttachChunkMesh(chunk);
+                }
+
+                return;
+                var info = hexEntityProxy.WorldInfoProxy;
+                var oldIsLand = info.IsLand.Value;
+                info.IsLand.Value = !hexEntityProxy.Position.Neighbors()
+                    .Any(n =>
+                    {
+                        var neighborInfo = GetHexagonInfo(n);
+                        return !neighborInfo.IsLand.Value && neighborInfo.Elevation.Value >= elevation;
+                    });
+
+                hexEntityProxy.ClearMesh().InitializeUpSideMesh().InitializeBordersMesh(this);
+                var neighborsPosition = hexEntityProxy.Position.Neighbors();
+                foreach (var neighborPosition in neighborsPosition)
+                {
+                    var neighbor = _worldStateProxy.Hexagons.GetValueOrDefault(neighborPosition);
+                    neighbor.ClearMesh().InitializeUpSideMesh().InitializeBordersMesh(this);
+                }
+                // if(info.IsLand.Value == oldIsLand)
+                // TODO: Обновляем весь чанк
+            }
+
+            void LandStateModified(HexEntityProxy entityProxy, bool isLand)
+            {
+                return;
+                var neighborsPosition = hexEntityProxy.Position.Neighbors();
+                foreach (var neighborPosition in neighborsPosition)
+                {
+                    var neighbor = _worldStateProxy.Hexagons.GetValueOrDefault(neighborPosition) ??
+                                   AttachHexagon(neighborPosition, out var _);
+
+                    var info = neighbor.WorldInfoProxy;
+                    info.IsLand.Value = !neighbor.Position.Neighbors()
                         .Any(n =>
                         {
                             var neighborInfo = GetHexagonInfo(n);
-                            return !neighborInfo.IsLand.Value && neighborInfo.Elevation.Value >= v;
+                            return !neighborInfo.IsLand.Value &&
+                                   neighborInfo.Elevation.Value >= info.Elevation.Value;
                         });
+                }
 
-                    hexagonEntityProxy.ClearMesh().InitializeUpSideMesh().InitializeBordersMesh(this);
-                    var neighborsPosition = hexagonEntityProxy.Position.Neighbors();
-                    foreach (var neighborPosition in neighborsPosition)
-                    {
-                        var neighbor = _worldStateProxy.Hexagons.GetValueOrDefault(neighborPosition);
-                        neighbor.ClearMesh().InitializeUpSideMesh().InitializeBordersMesh(this);
-                    }
-                    // if(info.IsLand.Value == oldIsLand)
-                    // TODO: Обновляем весь чанк
-                });
-
-                hexagonEntityProxy.WorldInfoProxy.IsLand.Skip(1).Subscribe(v =>
-                {
-                    var neighborsPosition = hexagonEntityProxy.Position.Neighbors();
-                    foreach (var neighborPosition in neighborsPosition)
-                    {
-                        var neighbor = _worldStateProxy.Hexagons.GetValueOrDefault(neighborPosition) ??
-                                       AttachHexagon(neighborPosition);
-
-                        var info = neighbor.WorldInfoProxy;
-                        info.IsLand.Value = !neighbor.Position.Neighbors()
-                            .Any(n =>
-                            {
-                                var neighborInfo = GetHexagonInfo(n);
-                                return !neighborInfo.IsLand.Value &&
-                                       neighborInfo.Elevation.Value >= info.Elevation.Value;
-                            });
-                    }
-
-                    hexagonEntityProxy.ClearMesh().InitializeUpSideMesh().InitializeBordersMesh(this);
-                    // TODO: Обновляем весь чанк
-                });
-
-                hexagonEntityProxy.WorldInfoProxy.FogOfWarState.Skip(1).Subscribe(_ =>
-                {
-                    hexagonEntityProxy.ClearMesh().InitializeUpSideMesh().InitializeBordersMesh(this);
-                    var neighborsPosition = hexagonEntityProxy.Position.Neighbors();
-                    foreach (var neighborPosition in neighborsPosition)
-                    {
-                        var neighbor = _worldStateProxy.Hexagons.GetValueOrDefault(neighborPosition);
-                        if (neighbor != null)
-                        {
-                            neighbor.ClearMesh().InitializeUpSideMesh().InitializeBordersMesh(this);
-                        }
-                    }
-                    // TODO: Обновляем весь чанк
-                });
-
-                _worldStateProxy.Hexagons.Add(cube, hexagonEntityProxy);
+                hexEntityProxy.ClearMesh().InitializeUpSideMesh().InitializeBordersMesh(this);
+                // TODO: Обновляем весь чанк
             }
 
+            void FogOfWarModified(HexEntityProxy entityProxy, FogOfWarState state)
+            {
+                var neighborsPosition = entityProxy.Position.Neighbors();
+                var changedChunks = new HashSet<Vector3Int>();
+                foreach (var neighborPosition in neighborsPosition)
+                {
+                    var neighbor = _worldStateProxy.Hexagons.GetValueOrDefault(neighborPosition);
+                    if (neighbor == null)
+                    {
+                        AttachHexagon(neighborPosition, out var modifiedChunks);
+                        foreach (var modifiedChunk in modifiedChunks) changedChunks.Add(modifiedChunk);
+                    }
+                }
+
+                foreach (var chunk in changedChunks)
+                {
+                    AttachChunkMesh(chunk);
+                }
+            }
+        }
+
+        public void AttachChunkMesh(Vector3Int chunkPosition)
+        {
             var hexagons = _worldStateProxy.Hexagons
                 .Where(h => h.Value.ChunkPosition == chunkPosition)
                 .Select(h => h.Value)
                 .ToArray();
 
+            if (hexagons.Length == 0) return;
             foreach (var hexagon in hexagons)
             {
                 hexagon.ClearMesh().InitializeUpSideMesh().InitializeBordersMesh(this);
             }
 
+            // Создаем меш чанка, если его еще нет
+            if (!_worldStateProxy.Chunks.ContainsKey(chunkPosition))
+            {
+                _worldStateProxy.InstanceChunkObject(chunkPosition);
+            }
+
             var newMesh = new Mesh() { name = $"Chunk [{chunkPosition}]" };
+            newMesh.MarkDynamic();
             newMesh.vertices = hexagons.SelectMany(h => h.HexMesh.Vertices).ToArray();
             newMesh.uv2 = hexagons.SelectMany(h => h.HexMesh.UVs["uv2"]).ToArray(); // UV для граней гексов
             newMesh.colors32 = hexagons.SelectMany(h => h.HexMesh.Colors).ToArray();
@@ -143,8 +188,6 @@ namespace AuroraWorld.Gameplay.World
             newMesh.RecalculateNormals();
             _worldStateProxy.Chunks[chunkPosition].Collider.sharedMesh = newMesh;
             _worldStateProxy.Chunks[chunkPosition].Filter.mesh = newMesh;
-
-            return hexagonEntityProxy;
         }
 
         public Vector3Int FindLand()
@@ -190,5 +233,7 @@ namespace AuroraWorld.Gameplay.World
                 return CubeMath.Range(land, r).All(n => GetHexagonInfo(n).IsLand.Value);
             }
         }
+
+        public bool ContainsHexagon(Vector3Int position) => _worldStateProxy.Hexagons.ContainsKey(position);
     }
 }

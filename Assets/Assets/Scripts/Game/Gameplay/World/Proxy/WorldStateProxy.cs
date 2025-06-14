@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using AuroraWorld.Gameplay.World.Data;
 using DI;
 using ObservableCollections;
@@ -35,9 +34,16 @@ namespace AuroraWorld.Gameplay.World.Geometry
 
             startPosition = WorldTerrain.FindLand();
             var rangeVisible = CubeMath.Range(startPosition, 8);
+            var chunkUpdated = new HashSet<Vector3Int>();
             foreach (var hexagonPosition in rangeVisible)
             {
-                WorldTerrain.AttachHexagon(hexagonPosition, FogOfWarHexState.Visible);
+                WorldTerrain.AttachHexagon(hexagonPosition, out var modifiedChunks, FogOfWarState.Visible);
+                foreach (var modifiedChunk in modifiedChunks) chunkUpdated.Add(modifiedChunk);
+            }
+
+            foreach (var chunkPosition in chunkUpdated)
+            {
+                WorldTerrain.AttachChunkMesh(chunkPosition);
             }
         }
 

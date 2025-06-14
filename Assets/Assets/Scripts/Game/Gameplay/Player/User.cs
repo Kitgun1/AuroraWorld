@@ -1,7 +1,5 @@
 using System.Collections.Generic;
 using System.Linq;
-using Assets.Utils.Coroutine;
-using AuroraWorld.Gameplay.World.Data;
 using AuroraWorld.Gameplay.World.Geometry;
 using DI;
 using R3;
@@ -40,7 +38,7 @@ namespace AuroraWorld.Gameplay.Player
                 if (attachedHexagon != null)
                 {
                     attachedHexagon.WorldInfoProxy.Elevation.Value += changeValue;
-                    worldProxy.WorldTerrain.AttachHexagon(hexagonPosition);
+                    worldProxy.WorldTerrain.AttachChunkMesh(hexagonPosition);
                 }
             });
             _input.ClickPosition.Skip(1).Subscribe(data =>
@@ -54,7 +52,7 @@ namespace AuroraWorld.Gameplay.Player
                     .Select(p => worldProxy.Hexagons.GetValueOrDefault(p))
                     .Where(h => h != null)
                     .ToArray();
-                _mapSelections.AttachSelection("selected", selectionSettings, hexagons);
+                _mapSelections.AttachSelection("selected", selectionSettings, worldProxy.WorldTerrain, hexagons);
             });
             _input.MouseMovedToHexagon.Skip(1).Subscribe(data => { });
         }
