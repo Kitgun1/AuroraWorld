@@ -67,27 +67,6 @@ namespace AuroraWorld.Gameplay.World.Geometry
             Chunks.Add(chunkPosition, new ChunkMeshData(filter, collider, renderer));
         }
 
-        private void InitializeNeighbors(HexEntityProxy[] hexagonsInChunk)
-        {
-            foreach (var hex in hexagonsInChunk)
-            {
-                hex.ClearMesh().InitializeUpSideMesh();
-                var neighborPositions = hex.Position.Neighbors();
-                for (var i = 0; i < neighborPositions.Length; i++)
-                {
-                    var neighborPosition = neighborPositions[i];
-                    var neighbor = hexagonsInChunk.FirstOrDefault(e => e.Position == neighborPosition);
-                    if(neighbor == null) continue;
-
-                    // Set neighbor for hex
-                    hex.SetNeighbor((DirectionType)i, neighbor);
-
-                    // Set hex for neighbor
-                    neighbor.SetNeighbor((DirectionType)(i + 3 % 6), hex);
-                }
-            }
-        }
-
         public struct ChunkMeshData
         {
             public readonly MeshFilter Filter;
