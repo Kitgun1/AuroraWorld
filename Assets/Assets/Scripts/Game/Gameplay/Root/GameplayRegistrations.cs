@@ -1,8 +1,10 @@
+using AuroraWorld.App.Database;
 using AuroraWorld.Gameplay.GameplayTime;
 using AuroraWorld.Gameplay.Player;
 using AuroraWorld.Gameplay.World;
 using AuroraWorld.Gameplay.World.Geometry;
 using DI;
+using R3;
 using UnityEngine;
 using Time = AuroraWorld.Gameplay.GameplayTime.Time;
 
@@ -13,19 +15,27 @@ namespace AuroraWorld.Gameplay.Root
         private static WorldStateProxy _worldState;
         private static DIContainer _container;
 
-        public static void Register(DIContainer container, GameplayEnterParams enterParams)
+        public static Observable<Unit> Register(DIContainer container, GameplayEnterParams enterParams)
         {
-            _container = container;
-            var geoSettings = Resources.Load<GeoConfiguration>("Configurations/Geo Settings");
-            container.RegisterInstance(geoSettings);
+            return Observable.Create<Unit>(observer =>
+            {
+                _container = container;
+                var geoSettings = Resources.Load<GeoConfiguration>("Configurations/Geo Settings");
+                container.RegisterInstance(geoSettings);
 
-            var world = new GameObject("[WORLD]");
-            container.RegisterInstance("ParentMeshTransform", world.transform);
-
-
-            TimeRegister();
-            var startPosition = WorldRegister(container, enterParams.WorldSeed);
-            UserRegister(startPosition.CubeToWorld());
+                var world = new GameObject("[WORLD]");
+                container.RegisterInstance("ParentMeshTransform", world.transform);
+                
+                TimeRegister().Subscribe(_ =>
+                {
+                    var startPosition = WorldRegister(container, enterParams.WorldSeed);
+                    UserRegister(startPosition.CubeToWorld());
+                    observer.OnNext(Unit.Default);
+                    observer.OnCompleted();
+                });
+                
+                return Disposable.Empty;
+            });
         }
 
         private static Vector3Int WorldRegister(DIContainer container, string seed)
@@ -36,11 +46,19 @@ namespace AuroraWorld.Gameplay.Root
             return startPosition;
         }
 
-        private static void TimeRegister()
+        private static Observable<Unit> TimeRegister()
         {
-            var time = new Time(0);
-            var timeProxy = new TimeProxy(time);
-            _container.RegisterInstance(timeProxy);
+            return Observable.Create<Unit>(observer =>
+            {
+                var storage = _container.Resolve<Storage>();
+                storage.Load("Gameplay time", new Time()).Subscribe(time =>
+                {
+                    new TimeProxy(_container, time);
+                    observer.OnNext(Unit.Default);
+                    observer.OnCompleted();
+                });
+                return Disposable.Empty;
+            });
         }
 
         #region User Registers

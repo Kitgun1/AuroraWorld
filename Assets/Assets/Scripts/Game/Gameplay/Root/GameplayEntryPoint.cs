@@ -13,20 +13,21 @@ namespace AuroraWorld.Gameplay.Root
 
         public Observable<GameplayExitParams> Run(DIContainer gameplayContainer, GameplayEnterParams enterParams)
         {
-            GameplayRegistrations.Register(gameplayContainer, enterParams);
-            
-            var uiScene = Instantiate(_sceneUIRootPrefab);
-            var uiRootView = gameplayContainer.Resolve<UIRootView>();
-            uiRootView.AttachSceneUI(uiScene.gameObject);
+            return GameplayRegistrations.Register(gameplayContainer, enterParams)
+                .SelectMany(_ =>
+                {
+                    var uiScene = Instantiate(_sceneUIRootPrefab);
+                    var uiRootView = gameplayContainer.Resolve<UIRootView>();
+                    uiRootView.AttachSceneUI(uiScene.gameObject);
 
-            var exitSignalSubject = new Subject<Unit>();
-            uiScene.Bind(exitSignalSubject);
+                    var exitSignalSubject = new Subject<Unit>();
+                    uiScene.Bind(exitSignalSubject);
 
-            var lobbyEnterParams = new LobbyEnterParams();
-            var gameplayExitParams = new GameplayExitParams(lobbyEnterParams);
-            var exitToLobbySceneSignal = exitSignalSubject.Select(_ => gameplayExitParams);
-
-            return exitToLobbySceneSignal;
+                    var lobbyEnterParams = new LobbyEnterParams();
+                    var gameplayExitParams = new GameplayExitParams(lobbyEnterParams);
+                    var exitToLobbySceneSignal = exitSignalSubject.Select(_ => gameplayExitParams);
+                    return exitToLobbySceneSignal;
+                });
         }
     }
 }
