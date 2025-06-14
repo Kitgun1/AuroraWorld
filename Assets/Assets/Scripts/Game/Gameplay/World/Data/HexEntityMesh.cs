@@ -7,7 +7,7 @@ namespace AuroraWorld.Gameplay.World.Data
     public class HexEntityMesh
     {
         public Vector3[] Vertices;
-        public Color[] Colors;
+        public Color32[] Colors;
         public int[] Triangles;
         public Dictionary<string, Vector2[]> UVs = new();
         public Edge[] InnerEdges;

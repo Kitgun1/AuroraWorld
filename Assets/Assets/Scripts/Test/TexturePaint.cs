@@ -1,6 +1,5 @@
 using System.Threading.Tasks;
 using AuroraWorld.Gameplay.World;
-using AuroraWorld.Gameplay.World.Data;
 using UnityEngine;
 using UnityEngine.UI;
 

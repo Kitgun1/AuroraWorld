@@ -136,7 +136,7 @@ namespace AuroraWorld.Gameplay.World.Geometry
 
             // Треугольники и цвета лицевой стороны
             hexMesh.Triangles = new int[18];
-            hexMesh.Colors = new Color[vertexes.Length];
+            hexMesh.Colors = new Color32[vertexes.Length];
             hexMesh.Colors[0] = info.GetBiomeColor(cube.GetHashCode());
             for (var i = 0; i < 6; i++)
             {
@@ -163,7 +163,7 @@ namespace AuroraWorld.Gameplay.World.Geometry
             var baseColor = mesh.Colors[0];
             var addedVertices = new List<Vector3>();
             var addedUVs2 = new List<Vector2>();
-            var addedColors = new List<Color>();
+            var addedColors = new List<Color32>();
             var addedTriangles = new List<int>();
 
             // Мосты: Строим только через 1
@@ -180,12 +180,18 @@ namespace AuroraWorld.Gameplay.World.Geometry
 
                 addedUVs2.AddRange(new[] { Vector2.zero, Vector2.zero, Vector2.zero, Vector2.zero });
 
-                addedColors.Add(baseColor);
-                addedColors.Add(baseColor);
-                var neighborPosition = position.Neighbor(outerEdge.Direction);
+                var neighborPosition = position.Neighbor(innerEdge.Direction);
                 var gammaSeed = neighborPosition.GetHashCode();
-                addedColors.Add(terrain.GetHexagonInfo(neighborPosition).GetBiomeColor(gammaSeed));
-                addedColors.Add(terrain.GetHexagonInfo(neighborPosition).GetBiomeColor(gammaSeed));
+                var neighborInfo = terrain.GetHexagonInfo(neighborPosition);
+                var neighborVertexColor = neighborInfo.GetBiomeColor(gammaSeed);
+                var neighborHidden = neighborInfo.FogOfWarState.Value == FogOfWarState.Hidden;
+                var selfHidden = baseColor.a == 0;
+                var selfColor = neighborHidden ? neighborVertexColor : baseColor;
+                var neighborColor = selfHidden ? baseColor : neighborVertexColor;
+                addedColors.Add(selfColor);
+                addedColors.Add(selfColor);
+                addedColors.Add(neighborColor);
+                addedColors.Add(neighborColor);
 
                 addedTriangles.AddRange(new[] { lastVertexIndex, lastVertexIndex + 1, lastVertexIndex + 3 });
                 addedTriangles.AddRange(new[] { lastVertexIndex, lastVertexIndex + 3, lastVertexIndex + 2 });
@@ -199,19 +205,45 @@ namespace AuroraWorld.Gameplay.World.Geometry
                 var outerEdge = mesh.OuterEdges[i];
                 var beforeOuterEdge = mesh.OuterEdges[i == 0 ? 5 : i - 1];
 
+
                 addedVertices.Add(innerEdge.P1);
                 addedVertices.Add(outerEdge.P1);
                 addedVertices.Add(beforeOuterEdge.P2);
 
                 addedUVs2.AddRange(new[] { Vector2.zero, Vector2.zero, Vector2.zero });
 
-                addedColors.Add(baseColor);
                 var neighbor1Position = position.Neighbor(outerEdge.Direction);
+                var neighbor1Info = terrain.GetHexagonInfo(neighbor1Position);
                 var gammaSeed = neighbor1Position.GetHashCode();
-                addedColors.Add(terrain.GetHexagonInfo(neighbor1Position).GetBiomeColor(gammaSeed));
+                var neighbor1VertexColor = neighbor1Info.GetBiomeColor(gammaSeed);
+                var neighbor1Hidden = neighbor1Info.FogOfWarState.Value == FogOfWarState.Hidden;
+
                 var neighbor2Position = position.Neighbor(beforeOuterEdge.Direction);
+                var neighbor2Info = terrain.GetHexagonInfo(neighbor2Position);
                 gammaSeed = neighbor2Position.GetHashCode();
-                addedColors.Add(terrain.GetHexagonInfo(neighbor2Position).GetBiomeColor(gammaSeed));
+                var neighbor2VertexColor = neighbor2Info.GetBiomeColor(gammaSeed);
+                var neighbor2Hidden = neighbor2Info.FogOfWarState.Value == FogOfWarState.Hidden;
+
+                var selfHidden = baseColor.a == 0;
+                var selfColor = neighbor1Hidden
+                    ? neighbor1VertexColor
+                    : neighbor2Hidden
+                        ? neighbor2VertexColor
+                        : baseColor;
+                var neighbor1Color = selfHidden
+                    ? baseColor
+                    : neighbor2Hidden
+                        ? neighbor2VertexColor
+                        : neighbor1VertexColor;
+                var neighbor2Color = selfHidden
+                    ? baseColor
+                    : neighbor1Hidden
+                        ? neighbor1VertexColor
+                        : neighbor2VertexColor;
+
+                addedColors.Add(selfColor);
+                addedColors.Add(neighbor1Color);
+                addedColors.Add(neighbor2Color);
 
                 addedTriangles.AddRange(new[] { lastVertexIndex, lastVertexIndex + 1, lastVertexIndex + 2 });
             }

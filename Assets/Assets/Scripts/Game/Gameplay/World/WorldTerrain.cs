@@ -129,7 +129,7 @@ namespace AuroraWorld.Gameplay.World
             var newMesh = new Mesh() { name = $"Chunk [{chunkPosition}]" };
             newMesh.vertices = hexagons.SelectMany(h => h.HexMesh.Vertices).ToArray();
             newMesh.uv2 = hexagons.SelectMany(h => h.HexMesh.UVs["uv2"]).ToArray(); // UV для граней гексов
-            newMesh.colors = hexagons.SelectMany(h => h.HexMesh.Colors).ToArray();
+            newMesh.colors32 = hexagons.SelectMany(h => h.HexMesh.Colors).ToArray();
             var triangles = new List<int>();
             var countVertices = 0;
             foreach (var hexagon in hexagons)

@@ -27,7 +27,7 @@ namespace AuroraWorld.Gameplay.GameplayTime
         private MonoBehaviour CreateRootObject()
         {
             var rootObject = new GameObject("[TIME]");
-            return rootObject.AddComponent<MonoBehaviour>();
+            return rootObject.GetComponent<MonoBehaviour>();
         }
     }
 }
