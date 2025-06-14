@@ -20,7 +20,7 @@ namespace AuroraWorld.Gameplay.World.Geometry
         {
             Origin = origin;
             _parentMesh = container.Resolve<Transform>("ParentMeshTransform");
-            Terrain = new Terrain(this, container.Resolve<GeoConfiguration>());
+            Terrain = new Terrain(container);
             Geography.SetSeed(seed);
 
             Origin.Hexagons.ForEach(h =>
