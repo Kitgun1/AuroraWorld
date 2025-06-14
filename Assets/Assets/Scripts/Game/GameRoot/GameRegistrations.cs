@@ -8,8 +8,8 @@ namespace AuroraWorld.GameRoot
     {
         public static void Register(DIContainer container)
         {
-            container.RegisterFactory(_ => new Storage()).AsSingle();
-            container.RegisterFactory(_ => new AnalyticsService()).AsSingle();
+            container.RegisterInstance(new Storage());
+            container.RegisterInstance(new AnalyticsService());
         }
     }
 }
