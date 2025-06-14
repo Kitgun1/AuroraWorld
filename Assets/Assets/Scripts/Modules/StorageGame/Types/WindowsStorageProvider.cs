@@ -1,6 +1,7 @@
 using System.IO;
 using Newtonsoft.Json;
 using R3;
+using UnityEngine;
 
 namespace AuroraWorld.App.Database
 {
@@ -13,7 +14,13 @@ namespace AuroraWorld.App.Database
             return Observable.Create<bool>(observer =>
             {
                 var json = JsonConvert.SerializeObject(obj, Formatting.Indented);
-                File.WriteAllText($"{FOLDER}{tag}.json", json);
+                var folderPath = Path.Combine(Application.persistentDataPath, $"{FOLDER}");
+                var filePath = Path.Combine(folderPath, $"{tag}.json");
+                if (!Directory.Exists(folderPath))
+                {
+                    Directory.CreateDirectory(folderPath);
+                }
+                File.WriteAllText(filePath, json);
                 observer.OnNext(true);
                 observer.OnCompleted();
                 return Disposable.Empty;
@@ -24,13 +31,14 @@ namespace AuroraWorld.App.Database
         {
             return Observable.Create<T>(observer =>
             {
-                if (!File.Exists($"{FOLDER}{tag}.json"))
+                var path = Path.Combine(Application.persistentDataPath, $"{FOLDER}{tag}.json");
+                if (!File.Exists(path))
                 {
                     observer.OnNext(defaultObj);
                 }
                 else
                 {
-                    var json = File.ReadAllText($"{FOLDER}{tag}.json");
+                    var json = File.ReadAllText(path);
                     var loadedObj = JsonConvert.DeserializeObject<T>(json) ?? defaultObj;
                     observer.OnNext(loadedObj);
                 }
