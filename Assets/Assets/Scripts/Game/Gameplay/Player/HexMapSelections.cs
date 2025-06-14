@@ -4,8 +4,8 @@ using Assets.Scripts.Utils;
 using Assets.Utils.Coroutine;
 using AuroraWorld.App.GameResources;
 using AuroraWorld.Gameplay.Player.Proxy;
+using AuroraWorld.Gameplay.World;
 using AuroraWorld.Gameplay.World.Geometry;
-using R3;
 using UnityEngine;
 
 namespace AuroraWorld.Gameplay.Player
@@ -15,7 +15,7 @@ namespace AuroraWorld.Gameplay.Player
         private readonly Dictionary<string, Selection> _selections = new();
         private readonly Resource<Material> _selectionMaterialsResource = new();
 
-        public void AttachSelection(string tag, SelectionSettingsProxy settings, params HexEntityProxy[] hexagons)
+        public void AttachSelection(string tag, SelectionSettingsProxy settings, WorldTerrain worldTerrain, params HexEntityProxy[] hexagons)
         {
             var selection = SelectionMeshLoadOrCreate(tag);
             _selections.TryAdd(tag, selection);
@@ -36,7 +36,7 @@ namespace AuroraWorld.Gameplay.Player
                 var resultSelected = selected.Where(s => intersections.Any(i => i == s.Position)).ToArray();
                 if (settings.OnlyNeighbor.Value)
                 {
-                    var groupCount = HexagonGroupUtils.GroupConnectedHexagons(resultSelected).Count;
+                    var groupCount = HexagonGroupUtils.GroupConnectedHexagons(resultSelected, worldTerrain).Count;
                     if (groupCount == 0)
                     {
                         RemoveSelection(tag);
@@ -54,11 +54,13 @@ namespace AuroraWorld.Gameplay.Player
             {
                 if (settings.OnlyNeighbor.Value && selected.Count > 0)
                 {
-                    var connectedGroups = HexagonGroupUtils.GroupConnectedHexagons(hexagons);
+                    var connectedGroups = HexagonGroupUtils.GroupConnectedHexagons(hexagons, worldTerrain);
 
                     foreach (var group in connectedGroups)
                     {
-                        if (group.Any(h => h.GetNeighbors().Any(h1 => selected.Any(s => s.Position == h1?.Position))))
+                        if (group.Any(h => h.Position.Neighbors()
+                                .Select(i => worldTerrain.ContainsHexagon(i) ? worldTerrain.AttachHexagon(i, out _) : null)
+                                .Any(h1 => selected.Any(s => s.Position == h1?.Position))))
                         {
                             selected.AddRange(group);
                         }
