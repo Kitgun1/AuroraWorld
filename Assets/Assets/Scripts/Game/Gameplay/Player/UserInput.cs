@@ -1,5 +1,6 @@
 using AuroraWorld.Gameplay.Player.InputData;
 using AuroraWorld.Gameplay.World.Geometry;
+using DI;
 using R3;
 using UnityEngine;
 
@@ -11,10 +12,12 @@ namespace AuroraWorld.Gameplay.Player
         public readonly Subject<MouseMoveData> MouseMove = new();
         public readonly Subject<MouseMovedToHexagon> MouseMovedToHexagon = new();
 
+        private DIContainer _container;
         private Camera _camera;
 
-        public void Run(MonoBehaviour monoBehaviour, Camera currentCamera)
+        public void Run(DIContainer container, MonoBehaviour monoBehaviour, Camera currentCamera)
         {
+            _container = container;
             _camera = currentCamera;
 
             for (int i = 0; i < 3; i++)
@@ -67,9 +70,10 @@ namespace AuroraWorld.Gameplay.Player
 
         private Vector3 ToWorldPosition(Vector3 screenPosition)
         {
+            var terrain = _container.Resolve<WorldStateProxy>().Terrain;
             var ray = _camera.ScreenPointToRay(screenPosition);
             RaycastHit[] hits = new RaycastHit[1];
-            var isHit = Physics.RaycastNonAlloc(ray, hits, 30, ~0) > 0;
+            var isHit = Physics.RaycastNonAlloc(ray, hits, 300, ~0) > 0;
 
             Vector3 worldPoint;
             if (isHit)
@@ -81,6 +85,15 @@ namespace AuroraWorld.Gameplay.Player
                 var distanceToGround = ray.origin.y / -ray.direction.y;
                 worldPoint = ray.origin + ray.direction * distanceToGround;
                 worldPoint.y = 0;
+                var line = CubeMath.Line(ray.origin.WorldToCube(), worldPoint.WorldToCube());
+                foreach (var cubePosition in line)
+                {
+                    var elevation = terrain.GetHexagonInfo(cubePosition).Elevation.Value / GeometryHexagon.ELEVATION_MODIFER;
+                    distanceToGround = (ray.origin.y - elevation) / -ray.direction.y;
+                    worldPoint = ray.origin + ray.direction * distanceToGround;
+                    worldPoint.y = elevation;
+                    if (worldPoint.WorldToCube() == cubePosition) return worldPoint;
+                }
             }
 
             return worldPoint;

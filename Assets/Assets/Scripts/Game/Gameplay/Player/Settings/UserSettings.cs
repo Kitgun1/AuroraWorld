@@ -10,7 +10,7 @@ namespace AuroraWorld.Gameplay.Player
         {
             SelectionSettings = new SelectionSettingsProxy(new SelectionSettings()
             {
-                Range = 1,
+                Range = 3,
                 OnlyNeighbor = true,
                 RemoveMode = false
             });

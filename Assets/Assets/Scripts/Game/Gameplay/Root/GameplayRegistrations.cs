@@ -25,7 +25,7 @@ namespace AuroraWorld.Gameplay.Root
 
                 var world = new GameObject("[WORLD]");
                 container.RegisterInstance("ParentMeshTransform", world.transform);
-                
+
                 TimeRegister().Subscribe(_ =>
                 {
                     var startPosition = WorldRegister(container, enterParams.WorldSeed);
@@ -33,7 +33,7 @@ namespace AuroraWorld.Gameplay.Root
                     observer.OnNext(Unit.Default);
                     observer.OnCompleted();
                 });
-                
+
                 return Disposable.Empty;
             });
         }
@@ -68,7 +68,7 @@ namespace AuroraWorld.Gameplay.Root
             var camera = CameraRegister(user.transform, startPosition);
 
             var input = new UserInput();
-            input.Run(user, camera);
+            input.Run(_container, user, camera);
             _container.RegisterInstance(input);
 
             user.Run(_container);
