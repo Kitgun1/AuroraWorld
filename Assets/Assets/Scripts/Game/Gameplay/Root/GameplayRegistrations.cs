@@ -25,6 +25,12 @@ namespace AuroraWorld.Gameplay.Root
 
                 var world = new GameObject("[WORLD]");
                 container.RegisterInstance("ParentMeshTransform", world.transform);
+                var plane = GameObject.CreatePrimitive(PrimitiveType.Plane);
+                Object.Destroy(plane.GetComponent<MeshCollider>());
+                plane.transform.position = new Vector3(0, -5, 0);
+                plane.transform.rotation = Quaternion.Euler(180, 0, 0);
+                plane.transform.localScale = new Vector3(100, 100, 100);
+                plane.transform.parent = world.transform;
 
                 TimeRegister().Subscribe(_ =>
                 {
