@@ -14,6 +14,7 @@ namespace AuroraWorld.Gameplay.World.Geometry
         public const float SIZE_X = 0.8660254038f;
         public const float WIDTH = HEIGHT * SIZE_X;
         public const float ELEVATION_STEP = 0.02f;
+        public const float ELEVATION_MODIFER = 8f;
 
         #region Convertings
 
@@ -34,7 +35,7 @@ namespace AuroraWorld.Gameplay.World.Geometry
         public static Vector3 HexToWorld(this Vector2Int hex, float y = 0f)
         {
             var offsetX = hex.y % 2 == 0 ? 0 : WIDTH;
-            return new Vector3(hex.x * SIZE_X - offsetX, y / 8f, hex.y * SIZE_Y * 0.75f);
+            return new Vector3(hex.x * SIZE_X - offsetX, y / ELEVATION_MODIFER, hex.y * SIZE_Y * 0.75f);
         }
 
         public static Vector3 CubeToWorld(this Vector3Int cube, float y = 0f) => cube.ToHex().HexToWorld(y);
@@ -126,7 +127,6 @@ namespace AuroraWorld.Gameplay.World.Geometry
         public static HexagonMesh InstanceUpSideMesh(Vector3Int cube, HexagonWorldInfoProxy info)
         {
             var hexMesh = new HexagonMesh();
-
             var worldCenter = cube.CubeToWorld(info.Elevation.Value);
 
             // Вершины лицевой стороны
@@ -174,6 +174,14 @@ namespace AuroraWorld.Gameplay.World.Geometry
                 var lastVertexIndex = mesh.Vertices.Length + addedVertices.Count;
                 var innerEdge = mesh.InnerEdges[i];
                 var outerEdge = mesh.OuterEdges[i];
+                
+                var neighborPosition = position.Neighbor(innerEdge.Direction);
+                var neighborInfo = terrain.GetHexagonInfo(neighborPosition);
+                
+                if (neighborInfo.FogOfWarState.Value == FogOfWarState.Hidden)
+                {
+                    continue;
+                }
 
                 addedVertices.Add(innerEdge.P1);
                 addedVertices.Add(innerEdge.P2);
@@ -182,8 +190,6 @@ namespace AuroraWorld.Gameplay.World.Geometry
 
                 addedUVs2.AddRange(new[] { Vector2.zero, Vector2.zero, Vector2.zero, Vector2.zero });
 
-                var neighborPosition = position.Neighbor(innerEdge.Direction);
-                var neighborInfo = terrain.GetHexagonInfo(neighborPosition);
                 var neighborVertexColor = neighborInfo.GetBiomeColor(neighborPosition);
                 var neighborHidden = neighborInfo.FogOfWarState.Value == FogOfWarState.Hidden;
                 var selfHidden = baseColor.a == 0;
@@ -206,6 +212,17 @@ namespace AuroraWorld.Gameplay.World.Geometry
                 var outerEdge = mesh.OuterEdges[i];
                 var beforeOuterEdge = mesh.OuterEdges[i == 0 ? 5 : i - 1];
 
+                var neighbor1Position = position.Neighbor(outerEdge.Direction);
+                var neighbor1Info = terrain.GetHexagonInfo(neighbor1Position);
+                
+                var neighbor2Position = position.Neighbor(beforeOuterEdge.Direction);
+                var neighbor2Info = terrain.GetHexagonInfo(neighbor2Position);
+                
+                if (neighbor1Info.FogOfWarState.Value == FogOfWarState.Hidden ||
+                    neighbor2Info.FogOfWarState.Value == FogOfWarState.Hidden)
+                {
+                    continue;
+                }
 
                 addedVertices.Add(innerEdge.P1);
                 addedVertices.Add(outerEdge.P1);
@@ -213,13 +230,9 @@ namespace AuroraWorld.Gameplay.World.Geometry
 
                 addedUVs2.AddRange(new[] { Vector2.zero, Vector2.zero, Vector2.zero });
 
-                var neighbor1Position = position.Neighbor(outerEdge.Direction);
-                var neighbor1Info = terrain.GetHexagonInfo(neighbor1Position);
                 var neighbor1VertexColor = neighbor1Info.GetBiomeColor(neighbor1Position);
                 var neighbor1Hidden = neighbor1Info.FogOfWarState.Value == FogOfWarState.Hidden;
 
-                var neighbor2Position = position.Neighbor(beforeOuterEdge.Direction);
-                var neighbor2Info = terrain.GetHexagonInfo(neighbor2Position);
                 var neighbor2VertexColor = neighbor2Info.GetBiomeColor(neighbor2Position);
                 var neighbor2Hidden = neighbor2Info.FogOfWarState.Value == FogOfWarState.Hidden;
 
