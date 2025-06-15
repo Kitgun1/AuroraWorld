@@ -48,7 +48,6 @@ namespace AuroraWorld.Gameplay.World
                     if (info.Elevation.Value >= _geo.LandMinElevation && !hasWaterSource)
                     {
                         info.IsLand.Value = true;
-                        Debug.Log($"Осушаю... {info.IsLand.Value}");
                         Array.ForEach(neighborPositions, n =>
                         {
                             if (!ContainsHexagon(n)) return;
@@ -128,6 +127,10 @@ namespace AuroraWorld.Gameplay.World
                 {
                     hexEntityProxy.WorldInfoProxy.FogOfWarState.Value = fogState;
                     modifiedChunks.Add(hexEntityProxy.ChunkPosition);
+                    foreach (var neighbor in hexEntityProxy.Position.Neighbors())
+                    {
+                        modifiedChunks.Add(ChunkUtils.CubeToChunk(neighbor));
+                    }
                 }
 
                 return hexEntityProxy;
@@ -137,22 +140,12 @@ namespace AuroraWorld.Gameplay.World
 
             var hexagonEntity = new Hexagon(cube);
             hexEntityProxy = new HexagonProxy(hexagonEntity, GetHexagonInfo(cube, fogState));
+            hexEntityProxy.WorldInfoProxy.FogOfWarState.Value = fogState;
             _worldStateProxy.Hexagons.Add(cube, hexEntityProxy);
             modifiedChunks.Add(hexEntityProxy.ChunkPosition);
-            if (fogState != FogOfWarState.Hidden)
+            foreach (var neighbor in hexEntityProxy.Position.Neighbors())
             {
-                var neighbors = hexEntityProxy.Position.Neighbors();
-                foreach (var neighborPosition in neighbors)
-                {
-                    modifiedChunks.Add(ChunkUtils.CubeToChunk(neighborPosition));
-                    if (ContainsHexagon(neighborPosition)) continue;
-                    var neighborHexagon = new Hexagon(neighborPosition);
-                    var neighbor = new HexagonProxy(neighborHexagon, GetHexagonInfo(neighborPosition));
-                    neighbor.WorldInfoProxy.Elevation.Skip(1).Subscribe(v => ElevationModified(neighbor, v));
-                    neighbor.WorldInfoProxy.IsLand.Skip(1).Subscribe(v => LandStateModified(neighbor, v));
-                    neighbor.WorldInfoProxy.FogOfWarState.Skip(1).Subscribe(v => FogOfWarModified(neighbor, v));
-                    _worldStateProxy.Hexagons.Add(neighborPosition, neighbor);
-                }
+                modifiedChunks.Add(ChunkUtils.CubeToChunk(neighbor));
             }
 
             hexEntityProxy.WorldInfoProxy.Elevation.Skip(1).Subscribe(v => ElevationModified(hexEntityProxy, v));
@@ -174,12 +167,10 @@ namespace AuroraWorld.Gameplay.World
 
             void LandStateModified(HexagonProxy entityProxy, bool isLand)
             {
-                //_dirtyHexagons.Add(entityProxy);
             }
 
             void FogOfWarModified(HexagonProxy entityProxy, FogOfWarState state)
             {
-                _dirtyHexagons.Add(entityProxy);
             }
         }
 
