@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using AuroraWorld.Gameplay.World.Data;
 using AuroraWorld.Gameplay.World.Geometry;
 using DI;
 using R3;
@@ -24,8 +25,10 @@ namespace AuroraWorld.Gameplay.Player
 
             var selectionSettings = _userSettings.SelectionSettings;
 
+            // Изменение ландшафта на ПКМ и ЛКМ
             _input.ClickPosition.Skip(1).Subscribe(data =>
             {
+                if (data.HasShift || data.HasAlt || data.HasCtrl) return;
                 var hexagonPosition = data.WorldPosition.WorldToHex().ToCube();
                 var worldProxy = container.Resolve<WorldStateProxy>();
                 var changeValue = data.MouseButton switch
@@ -41,9 +44,12 @@ namespace AuroraWorld.Gameplay.Player
                     worldProxy.Terrain.AttachChunkMesh(hexagonPosition);
                 }
             });
+
+            // Выделение гексов на СКМ
             _input.ClickPosition.Skip(1).Subscribe(data =>
             {
                 // selection
+                if (data.HasShift || data.HasAlt || data.HasCtrl) return;
                 if (data.MouseButton != 2) return;
                 var hexagonPosition = data.WorldPosition.WorldToHex().ToCube();
                 var worldProxy = container.Resolve<WorldStateProxy>();
@@ -55,6 +61,32 @@ namespace AuroraWorld.Gameplay.Player
                 _mapSelections.AttachSelection("selected", selectionSettings, worldProxy.Terrain, hexagons);
             });
             _input.MouseMovedToHexagon.Skip(1).Subscribe(data => { });
+
+            // Редактирование тумана войны
+            _input.ClickPosition.Skip(1).Subscribe(data =>
+            {
+                if (!data.HasShift || data.HasAlt || data.HasCtrl) return;
+
+                var hexagonPosition = data.WorldPosition.WorldToCube();
+                var worldProxy = container.Resolve<WorldStateProxy>();
+                var range = CubeMath.Range(hexagonPosition, selectionSettings.Range.Value);
+
+                HashSet<Vector3Int> allModifiedChunks = new();
+                foreach (var cube in range)
+                {
+                    var fogState = (FogOfWarState)(data.MouseButton + 1);
+                    worldProxy.Terrain.AttachHexagon(cube, out var modifiedChunks, fogState);
+                    foreach (var chunk in modifiedChunks)
+                    {
+                        allModifiedChunks.Add(chunk);
+                    }
+                }
+
+                foreach (var modified in allModifiedChunks)
+                {
+                    worldProxy.Terrain.AttachChunkMesh(modified);
+                }
+            });
         }
     }
 }
