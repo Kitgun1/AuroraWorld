@@ -19,6 +19,7 @@ namespace AuroraWorld.Gameplay.World.Geometry
         public WorldStateProxy(DIContainer container, WorldState origin, string seed, out Vector3Int startPosition)
         {
             Origin = origin;
+            container.RegisterInstance(this);
             _parentMesh = container.Resolve<Transform>("ParentMeshTransform");
             Terrain = new Terrain(container);
             Geography.SetSeed(seed);

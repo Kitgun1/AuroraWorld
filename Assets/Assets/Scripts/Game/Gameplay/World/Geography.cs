@@ -51,14 +51,14 @@ namespace AuroraWorld.Gameplay.World
             return e;
         }
 
-        public static float GetElevation(this GeoConfiguration configuration, Vector2Int hex)
+        public static int GetElevation(this GeoConfiguration configuration, Vector2Int hex)
         {
             if (!_seedsInitialized) throw new Exception("Seed not initialized. Use SetSeed for set seed!");
 
             var e = FBM(hex.x, hex.y, _continentSeed, configuration.ContinentScale, 10);
             e = e * e * e;
 
-            return Mathf.Clamp01(Mathf.RoundToInt(e / GeometryHexagon.ELEVATION_STEP) * GeometryHexagon.ELEVATION_STEP);
+            return Mathf.RoundToInt(e / GeometryHexagon.ELEVATION_STEP);
         }
 
         public static float GetTemperature(this GeoConfiguration configuration, Vector2Int hex)

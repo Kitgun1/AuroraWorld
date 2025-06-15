@@ -10,11 +10,11 @@ namespace AuroraWorld.Gameplay.World
     {
         [Space, Header("Continent Properties")]
         [Range(0, 1)] public float ContinentScale;
-        [Range(0, 1)] public float LandMinElevation;
+        [Range(0, 100)] public int LandMinElevation;
         
         [Space, Header("Rives Properties")]
         [Range(0, 1)] public float RivesScale;
-        [Range(0, 1)] public float RivesMinElevation;
+        [Range(0, 100)] public int RivesMinElevation;
         
         [Space(15), Header("Other")]
         public BiomesConfiguration BiomesConfiguration;

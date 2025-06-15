@@ -30,8 +30,8 @@ namespace AuroraWorld.Gameplay.Player
                 var worldProxy = container.Resolve<WorldStateProxy>();
                 var changeValue = data.MouseButton switch
                 {
-                    0 => GeometryHexagon.ELEVATION_STEP,
-                    1 => -GeometryHexagon.ELEVATION_STEP,
+                    0 => 1,
+                    1 => -1,
                     _ => 0
                 };
                 var attachedHexagon = worldProxy.Hexagons.GetValueOrDefault(hexagonPosition);

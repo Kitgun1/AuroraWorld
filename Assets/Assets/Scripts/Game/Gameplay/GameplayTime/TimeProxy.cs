@@ -26,7 +26,7 @@ namespace AuroraWorld.Gameplay.GameplayTime
             Quart = new ReactiveProperty<int>(Origin.Quart);
             Year = new ReactiveProperty<int>(Origin.Year);
 
-            Observable.Interval(TimeSpan.FromMilliseconds(500))
+            Observable.Interval(TimeSpan.FromMilliseconds(1000))
                 .Subscribe(_ => Tick.Value = (Tick.Value + 1) % 10)
                 .AddTo(container.Resolve<Transform>("ParentMeshTransform"));
 

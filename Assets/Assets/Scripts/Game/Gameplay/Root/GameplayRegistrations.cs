@@ -42,7 +42,6 @@ namespace AuroraWorld.Gameplay.Root
         {
             var worldState = new WorldState();
             _worldState = new WorldStateProxy(container, worldState, seed, out var startPosition);
-            container.RegisterInstance(_worldState);
             return startPosition;
         }
 

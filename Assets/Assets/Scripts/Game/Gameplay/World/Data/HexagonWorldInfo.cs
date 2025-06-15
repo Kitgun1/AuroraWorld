@@ -6,7 +6,7 @@ namespace AuroraWorld.Gameplay.World.Data
     public class HexagonWorldInfo
     {
         public bool IsLand;
-        public float Elevation;
+        public int Elevation;
         public float Temperature;
         public float Humidity;
         public FogOfWarState FogOfWarState;

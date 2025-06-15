@@ -9,7 +9,6 @@ namespace AuroraWorld.Gameplay.World.Geometry
 {
     public static class GeometryHexagon
     {
-        public const float Y_MULTIPLIER = 4f;
         public const float SIZE_Y = 1f;
         public const float HEIGHT = SIZE_Y / 2;
         public const float SIZE_X = 0.8660254038f;
@@ -35,7 +34,7 @@ namespace AuroraWorld.Gameplay.World.Geometry
         public static Vector3 HexToWorld(this Vector2Int hex, float y = 0f)
         {
             var offsetX = hex.y % 2 == 0 ? 0 : WIDTH;
-            return new Vector3(hex.x * SIZE_X - offsetX, y, hex.y * SIZE_Y * 0.75f);
+            return new Vector3(hex.x * SIZE_X - offsetX, y / 8f, hex.y * SIZE_Y * 0.75f);
         }
 
         public static Vector3 CubeToWorld(this Vector3Int cube, float y = 0f) => cube.ToHex().HexToWorld(y);
@@ -88,7 +87,7 @@ namespace AuroraWorld.Gameplay.World.Geometry
                 var p1 = GetCenter(hexagonMesh.InnerEdges[i - 1].P1,
                     hexagonMesh.OuterEdges[i - 1].P1,
                     hexagonMesh.OuterEdges[beforeEdge].P2);
-                
+
                 var p2 = GetCenter(hexagonMesh.InnerEdges[i - 1].P2,
                     hexagonMesh.OuterEdges[i - 1].P2,
                     hexagonMesh.OuterEdges[afterEdge].P1);
@@ -109,14 +108,14 @@ namespace AuroraWorld.Gameplay.World.Geometry
             var angle = Deg2Rad * (60 * i + 30);
             return new Vector3(
                 center.x + Cos(angle) * (HEIGHT - offset),
-                center.y + center.y * Y_MULTIPLIER,
+                center.y,
                 center.z + Sin(angle) * (HEIGHT - offset));
         }
 
         private static Vector3[] GetVertices(Vector3 worldCenter)
         {
             var vertices = new Vector3[7];
-            vertices[0] = worldCenter + Vector3.up * (worldCenter.y * Y_MULTIPLIER);
+            vertices[0] = worldCenter;
             for (var i = 0; i < 6; i++) vertices[i + 1] = worldCenter.GetVertex(i);
 
             return vertices;
@@ -140,14 +139,14 @@ namespace AuroraWorld.Gameplay.World.Geometry
             // Треугольники и цвета лицевой стороны
             hexMesh.Triangles = new int[18];
             hexMesh.Colors = new Color32[vertexes.Length];
-            hexMesh.Colors[0] = info.GetBiomeColor(cube.GetHashCode());
+            hexMesh.Colors[0] = info.GetBiomeColor(cube);
             for (var i = 0; i < 6; i++)
             {
                 hexMesh.Triangles[i * 3 + 0] = i + 2 > 6 ? 1 : i + 2;
                 hexMesh.Triangles[i * 3 + 1] = i + 1;
                 hexMesh.Triangles[i * 3 + 2] = 0;
 
-                hexMesh.Colors[i + 1] = info.GetBiomeColor(cube.GetHashCode());
+                hexMesh.Colors[i + 1] = info.GetBiomeColor(cube);
             }
 
             return hexMesh;
@@ -184,9 +183,8 @@ namespace AuroraWorld.Gameplay.World.Geometry
                 addedUVs2.AddRange(new[] { Vector2.zero, Vector2.zero, Vector2.zero, Vector2.zero });
 
                 var neighborPosition = position.Neighbor(innerEdge.Direction);
-                var gammaSeed = neighborPosition.GetHashCode();
                 var neighborInfo = terrain.GetHexagonInfo(neighborPosition);
-                var neighborVertexColor = neighborInfo.GetBiomeColor(gammaSeed);
+                var neighborVertexColor = neighborInfo.GetBiomeColor(neighborPosition);
                 var neighborHidden = neighborInfo.FogOfWarState.Value == FogOfWarState.Hidden;
                 var selfHidden = baseColor.a == 0;
                 var selfColor = neighborHidden ? neighborVertexColor : baseColor;
@@ -217,14 +215,12 @@ namespace AuroraWorld.Gameplay.World.Geometry
 
                 var neighbor1Position = position.Neighbor(outerEdge.Direction);
                 var neighbor1Info = terrain.GetHexagonInfo(neighbor1Position);
-                var gammaSeed = neighbor1Position.GetHashCode();
-                var neighbor1VertexColor = neighbor1Info.GetBiomeColor(gammaSeed);
+                var neighbor1VertexColor = neighbor1Info.GetBiomeColor(neighbor1Position);
                 var neighbor1Hidden = neighbor1Info.FogOfWarState.Value == FogOfWarState.Hidden;
 
                 var neighbor2Position = position.Neighbor(beforeOuterEdge.Direction);
                 var neighbor2Info = terrain.GetHexagonInfo(neighbor2Position);
-                gammaSeed = neighbor2Position.GetHashCode();
-                var neighbor2VertexColor = neighbor2Info.GetBiomeColor(gammaSeed);
+                var neighbor2VertexColor = neighbor2Info.GetBiomeColor(neighbor2Position);
                 var neighbor2Hidden = neighbor2Info.FogOfWarState.Value == FogOfWarState.Hidden;
 
                 var selfHidden = baseColor.a == 0;
