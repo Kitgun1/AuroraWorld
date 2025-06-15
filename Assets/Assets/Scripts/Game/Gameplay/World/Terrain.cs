@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using AuroraWorld.Gameplay.GameplayTime;
 using AuroraWorld.Gameplay.World.Data;
 using AuroraWorld.Gameplay.World.Geometry;
 using DI;
@@ -14,12 +15,89 @@ namespace AuroraWorld.Gameplay.World
         private readonly DIContainer _container;
         private readonly WorldStateProxy _worldStateProxy;
         private readonly GeoConfiguration _geo;
+        private readonly TimeProxy _timeProxy;
+
+        private readonly HashSet<HexagonProxy> _dirtyHexagons = new();
 
         public Terrain(DIContainer container)
         {
             _container = container;
             _worldStateProxy = container.Resolve<WorldStateProxy>();
             _geo = container.Resolve<GeoConfiguration>();
+            _timeProxy = container.Resolve<TimeProxy>();
+
+            _timeProxy.Tick.Skip(1).Subscribe(_ =>
+            {
+                if (_dirtyHexagons.Count == 0) return;
+                HashSet<HexagonProxy> newDirtyHexagons = new();
+                foreach (var dirtyHexagon in _dirtyHexagons.Where(e => !e.WorldInfoProxy.IsLand.Value))
+                {
+                    var info = dirtyHexagon.WorldInfoProxy;
+                    var neighborPositions = dirtyHexagon.Position.Neighbors();
+                    var neighbors = neighborPositions
+                        .Select(p => GetHexagonInfo(p))
+                        .ToArray();
+
+                    // Осушаем при высоте выше уровня моря и сосед с водой не выше высоты моря
+                    var hasWaterSource = neighbors.Any(i =>
+                        !i.IsLand.Value &&
+                        i.Elevation.Value > _geo.LandMinElevation &&
+                        i.Elevation.Value <= info.Elevation.Value &&
+                        _dirtyHexagons.All(d => d.WorldInfoProxy != i)
+                    );
+                    if (info.Elevation.Value >= _geo.LandMinElevation && !hasWaterSource)
+                    {
+                        info.IsLand.Value = true;
+                        Debug.Log($"Осушаю... {info.IsLand.Value}");
+                        Array.ForEach(neighborPositions, n =>
+                        {
+                            if (!ContainsHexagon(n)) return;
+                            newDirtyHexagons.Add(_worldStateProxy.Hexagons[n]);
+                        });
+                    }
+                }
+
+                foreach (var dirtyHexagon in _dirtyHexagons.Where(e => e.WorldInfoProxy.IsLand.Value))
+                {
+                    var info = dirtyHexagon.WorldInfoProxy;
+                    var neighborPositions = dirtyHexagon.Position.Neighbors();
+                    var neighbors = neighborPositions
+                        .Select(p => GetHexagonInfo(p))
+                        .ToArray();
+
+                    // Делаем водой при высоте ниже уровня моря и при наличии воды рядом
+                    var hasWaterNeighbor = neighbors.Any(i => !i.IsLand.Value);
+                    if (info.Elevation.Value < _geo.LandMinElevation && hasWaterNeighbor)
+                    {
+                        info.IsLand.Value = false;
+                        Array.ForEach(neighborPositions, n =>
+                        {
+                            if (!ContainsHexagon(n)) return;
+                            newDirtyHexagons.Add(_worldStateProxy.Hexagons[n]);
+                        });
+                    }
+
+                    // Делаем водой при наличии рядом воды выше/равной текущей высоты
+                    if (neighbors.Any(n => !n.IsLand.Value && info.Elevation.Value <= n.Elevation.Value))
+                    {
+                        info.IsLand.Value = false;
+                        Array.ForEach(neighborPositions, n =>
+                        {
+                            if (!ContainsHexagon(n)) return;
+                            newDirtyHexagons.Add(_worldStateProxy.Hexagons[n]);
+                        });
+                    }
+                }
+
+                var changedChunks = ChunkUtils.GetModifiedChunks(_dirtyHexagons.Select(i => i.Position).ToArray());
+                foreach (var chunk in changedChunks)
+                {
+                    AttachChunkMesh(chunk);
+                }
+
+                _dirtyHexagons.Clear();
+                Array.ForEach(newDirtyHexagons.ToArray(), h => _dirtyHexagons.Add(h));
+            });
         }
 
         public HexagonWorldInfoProxy GetHexagonInfo(Vector3Int cube, FogOfWarState defaultState = FogOfWarState.Hidden)
@@ -51,6 +129,7 @@ namespace AuroraWorld.Gameplay.World
                     hexEntityProxy.WorldInfoProxy.FogOfWarState.Value = fogState;
                     modifiedChunks.Add(hexEntityProxy.ChunkPosition);
                 }
+
                 return hexEntityProxy;
             }
 
@@ -68,15 +147,14 @@ namespace AuroraWorld.Gameplay.World
                     modifiedChunks.Add(ChunkUtils.CubeToChunk(neighborPosition));
                     if (ContainsHexagon(neighborPosition)) continue;
                     var neighborHexagon = new Hexagon(neighborPosition);
-                    var neighborProxy = new HexagonProxy(neighborHexagon, GetHexagonInfo(neighborPosition));
-                    neighborProxy.WorldInfoProxy.Elevation.Skip(1).Subscribe(v => ElevationModified(neighborProxy, v));
-                    neighborProxy.WorldInfoProxy.IsLand.Skip(1).Subscribe(v => LandStateModified(neighborProxy, v));
-                    neighborProxy.WorldInfoProxy.FogOfWarState.Skip(1).Subscribe(v => FogOfWarModified(neighborProxy, v));
-                    _worldStateProxy.Hexagons.Add(neighborPosition, neighborProxy);
+                    var neighbor = new HexagonProxy(neighborHexagon, GetHexagonInfo(neighborPosition));
+                    neighbor.WorldInfoProxy.Elevation.Skip(1).Subscribe(v => ElevationModified(neighbor, v));
+                    neighbor.WorldInfoProxy.IsLand.Skip(1).Subscribe(v => LandStateModified(neighbor, v));
+                    neighbor.WorldInfoProxy.FogOfWarState.Skip(1).Subscribe(v => FogOfWarModified(neighbor, v));
+                    _worldStateProxy.Hexagons.Add(neighborPosition, neighbor);
                 }
             }
 
-            // Обработка изменений 
             hexEntityProxy.WorldInfoProxy.Elevation.Skip(1).Subscribe(v => ElevationModified(hexEntityProxy, v));
             hexEntityProxy.WorldInfoProxy.IsLand.Skip(1).Subscribe(v => LandStateModified(hexEntityProxy, v));
             hexEntityProxy.WorldInfoProxy.FogOfWarState.Skip(1).Subscribe(v => FogOfWarModified(hexEntityProxy, v));
@@ -85,35 +163,23 @@ namespace AuroraWorld.Gameplay.World
 
             void ElevationModified(HexagonProxy entityProxy, float elevation)
             {
-                Debug.Log($"update chunk");
                 var changedChunks = ChunkUtils.GetModifiedChunks(entityProxy.Position.Neighbors());
                 foreach (var chunk in changedChunks)
                 {
                     AttachChunkMesh(chunk);
                 }
+
+                _dirtyHexagons.Add(entityProxy);
             }
 
             void LandStateModified(HexagonProxy entityProxy, bool isLand)
             {
-                
+                //_dirtyHexagons.Add(entityProxy);
             }
 
             void FogOfWarModified(HexagonProxy entityProxy, FogOfWarState state)
             {
-                var neighborsPosition = entityProxy.Position.Neighbors();
-                var changedChunks = new HashSet<Vector3Int>();
-                foreach (var neighborPosition in neighborsPosition)
-                {
-                    if (ContainsHexagon(neighborPosition))
-                    {
-                        changedChunks.Add(ChunkUtils.CubeToChunk(neighborPosition));
-                    }
-                }
-
-                foreach (var chunk in changedChunks)
-                {
-                    AttachChunkMesh(chunk);
-                }
+                _dirtyHexagons.Add(entityProxy);
             }
         }
 
