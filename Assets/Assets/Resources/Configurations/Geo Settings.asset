@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Geo Settings
   m_EditorClassIdentifier: 
   ContinentScale: 0.01
-  LandMinElevation: 0.1
+  LandMinElevation: 3
   RivesScale: 0
   RivesMinElevation: 0
   BiomesConfiguration: {fileID: 11400000, guid: 5fd9694e139b806418a4f63043dde7bc, type: 2}

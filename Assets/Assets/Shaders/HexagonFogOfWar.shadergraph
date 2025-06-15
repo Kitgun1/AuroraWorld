@@ -965,7 +965,7 @@
     "m_Title": "Fog of War",
     "m_Position": {
         "x": -1586.0,
-        "y": 318.0
+        "y": 318.0001220703125
     }
 }
 
@@ -2023,7 +2023,7 @@
     "m_ZTestMode": 4,
     "m_ZWriteControl": 0,
     "m_AlphaMode": 0,
-    "m_RenderFace": 2,
+    "m_RenderFace": 0,
     "m_AlphaClip": false,
     "m_CastShadows": true,
     "m_ReceiveShadows": true,
@@ -3338,8 +3338,8 @@
     "m_ObjectId": "8f373501e0504e28a29a8be03416fd99",
     "m_Title": "Remove Lit for fog of war",
     "m_Position": {
-        "x": -662.9999389648438,
-        "y": -504.9999084472656
+        "x": -662.9998779296875,
+        "y": -505.0000305175781
     }
 }
 
