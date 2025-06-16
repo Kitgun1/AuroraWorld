@@ -3,21 +3,16 @@ namespace AuroraWorld.Gameplay.GamePawn
     public class PawnProxy
     {
         public PawnHealthProxy Health;
+        public PawnSkillsProxy Skills;
 
         public readonly Pawn Origin;
 
         public PawnProxy(Pawn origin)
         {
             Origin = origin;
-
-            Health = new PawnHealthProxy(
-                new BodyPartProxy(Origin.Health.Head),
-                new BodyPartProxy(Origin.Health.LeftArm),
-                new BodyPartProxy(Origin.Health.RightArm),
-                new BodyPartProxy(Origin.Health.Torso),
-                new BodyPartProxy(Origin.Health.LeftLeg),
-                new BodyPartProxy(Origin.Health.RightLeg)
-                );
+            
+            Health = new PawnHealthProxy(Origin.Health);
+            Skills = new PawnSkillsProxy(Origin.Skills);
         }
     }
 }

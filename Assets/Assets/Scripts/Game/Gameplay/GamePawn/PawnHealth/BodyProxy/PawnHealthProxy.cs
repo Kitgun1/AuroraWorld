@@ -1,29 +1,25 @@
+using System.Linq;
+
 namespace AuroraWorld.Gameplay.GamePawn
 {
     public class PawnHealthProxy
     {
-        public readonly BodyPartProxy Head;
-        public readonly BodyPartProxy LeftArm;
-        public readonly BodyPartProxy RightArm;
-        public readonly BodyPartProxy Torso;
-        public readonly BodyPartProxy LeftLeg;
-        public readonly BodyPartProxy RightLeg;
+        public readonly BodyPartProxy[] BodyParts;
 
-        public int Health => Head.Health + LeftArm.Health + RightArm.Health + Torso.Health + LeftLeg.Health +
-                             RightLeg.Health;
-
-        public int MaxHealth => Head.MaxHealth + LeftArm.MaxHealth + RightArm.MaxHealth + Torso.MaxHealth +
-                                LeftLeg.MaxHealth + RightLeg.MaxHealth;
-
-        public PawnHealthProxy(BodyPartProxy head, BodyPartProxy leftArm, BodyPartProxy rightArm, BodyPartProxy torso,
-            BodyPartProxy leftLeg, BodyPartProxy rightLeg)
+        public readonly PawnHealth Origin;
+        
+        public int Health => BodyParts.Sum(e => e.Health);
+        public int MaxHealth => BodyParts.Sum(e => e.MaxHealth);
+        
+        public PawnHealthProxy(PawnHealth origin)
         {
-            Head = head;
-            LeftArm = leftArm;
-            RightArm = rightArm;
-            Torso = torso;
-            LeftLeg = leftLeg;
-            RightLeg = rightLeg;
+            Origin = origin;
+            
+            BodyParts = new BodyPartProxy[Origin.BodyParts.Length];
+            for (int i = 0; i < BodyParts.Length; i++)
+            {
+                BodyParts[i] = new BodyPartProxy(origin.BodyParts[i]);
+            }
         }
     }
 }

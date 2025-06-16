@@ -1,23 +1,15 @@
+using System;
+
 namespace AuroraWorld.Gameplay.GamePawn
 {
+    [Serializable]
     public class PawnHealth
     {
-        public BodyPart Head;
-        public BodyPart LeftArm;
-        public BodyPart RightArm;
-        public BodyPart Torso;
-        public BodyPart LeftLeg;
-        public BodyPart RightLeg;
+        public BodyPart[] BodyParts;
 
-        public PawnHealth(BodyPart head, BodyPart leftArm, BodyPart rightArm, BodyPart torso, BodyPart leftLeg,
-            BodyPart rightLeg)
+        public PawnHealth(params BodyPart[] bodyParts)
         {
-            Head = head;
-            LeftArm = leftArm;
-            RightArm = rightArm;
-            Torso = torso;
-            LeftLeg = leftLeg;
-            RightLeg = rightLeg;
+            BodyParts = bodyParts;
         }
     }
 }
