@@ -30,41 +30,28 @@ flowchart TB
     lobby_enter_params --> lobby
     other_scene_enter_params --> other_scene
 ```
-
-
-## Modules
-
-### Storage
-
-Storage - модуль для сохранения результатов игры.<br>
-Примеры использования:
-
-```csharp
-// Регистрация модуля
-container.RegisterSingleton(_ => new Storage());
-
-// Получение модуля
-var storage = container.Resolve<Storage>();
-
-// Сохранение объекта
-storage.Save(tag, obj);
-
-// Получение объекта
-var obj = storage.Load(tag, defaultObj);
+## Containers
+```mermaid
+flowchart BT
+    GameplaySceneContainer --> GameContainer
+    LobbySceneContainer --> GameContainer
 ```
 
+## Modules
+### Storage
+Сохранение игровых данных проекта. Зарегестрирован в `GameContainer`, 
+для получения -> `container.Resolve<Storage>();`<br>
+В `Storage` есть методы:
+* `Observable<T> Load<T>(string tag, T defaultObj = default)` - получение объекта. <br>
+Чтобы получить сам объект, ипользуйте `Load<T>().Subscribe(T => ...);`
+* `Observable<bool> Save<T>(string tag, T obj)` - запись объекта. <br>
+**ОБЯЗАТЕЛЬНО:** `Save<T>().Subscribe(T => ...);` даже если не нужно проверять успешность операции.
+
 ### Resource
-
-Resource - модуль для получения объектов из ресурсов<br>
-Примеры использования:
-
+Позволяет немного оптимизировать процесс получения ресурсов из проекта
+путем кеширования ресурсов определенного типа внутри себя. <br>
+Как использовать:
 ```csharp
-// Регистрация модуля
-container.RegisterSingleton("name", _ => new Resource<T>()); // where T : Object
-
-// Получение модуля
-var resource = сontainer.Resolve<Resource>();
-
-// Получение ресурса
-T obj = resource.Load("path");
+var resource = new Resource<T>();
+var asset = resource.Load("asset path");
 ```

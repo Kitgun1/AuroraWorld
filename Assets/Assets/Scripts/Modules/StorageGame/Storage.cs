@@ -8,10 +8,11 @@ namespace AuroraWorld.App.Database
 
         public Storage()
         {
-            _storage = new WindowsStorageProvider();
 #if UNITY_EDITOR
-            // TODO: storage for server, yandex game server
+            _storage = new WindowsStorageProvider();
+            return;
 #endif
+            // TODO: storage for server, yandex game server
         }
 
         public Observable<bool> Save<T>(string tag, T obj) => _storage.Save(tag, obj);
