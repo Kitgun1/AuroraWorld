@@ -15,10 +15,24 @@ namespace AuroraWorld.Gameplay.GameplayTime
 
         public readonly Time Origin;
 
+        public int Ticks => Tick.Value + Hours * HOUR_IN_DAY;
+        public int Hours => Hour.Value + Days * HOUR_IN_DAY;
+        public int Days => Day.Value + Quarts * DAY_IN_QUART;
+        public int Quarts => Quart.Value + Years * QUART_IN_YEAR;
+        public int Years => Year.Value;
+
+        private readonly Sun _sun;
+
+        public const int TICK_IN_HOUR = 100;
+        public const int HOUR_IN_DAY = 24;
+        public const int DAY_IN_QUART = 24;
+        public const int QUART_IN_YEAR = 4;
+
         public TimeProxy(DIContainer container, Time origin)
         {
             container.RegisterInstance(this);
             Origin = origin;
+            _sun = new Sun();
 
             Tick = new ReactiveProperty<int>(Origin.Tick);
             Hour = new ReactiveProperty<int>(Origin.Hour);
@@ -26,35 +40,37 @@ namespace AuroraWorld.Gameplay.GameplayTime
             Quart = new ReactiveProperty<int>(Origin.Quart);
             Year = new ReactiveProperty<int>(Origin.Year);
 
-            Observable.Interval(TimeSpan.FromMilliseconds(1000))
-                .Subscribe(_ => Tick.Value = (Tick.Value + 1) % 10)
+            Observable.Interval(TimeSpan.FromMilliseconds(200))
+                .Subscribe(_ => Tick.Value = (Tick.Value + 1) % TICK_IN_HOUR)
                 .AddTo(container.Resolve<Transform>("ParentMeshTransform"));
 
             Tick.Skip(1).Subscribe(t =>
             {
                 Origin.Tick = t;
-                if (t % 10 == 0)
+                if (t % TICK_IN_HOUR == 0)
                 {
                     Hour.Value++;
                 }
 
-                if (Hour.Value != 0 && Hour.Value % 24 == 0)
+                if (Hour.Value != 0 && Hour.Value % HOUR_IN_DAY == 0)
                 {
                     Hour.Value = 0;
                     Day.Value++;
                 }
 
-                if (Day.Value != 0 && Day.Value % 24 == 0)
+                if (Day.Value != 0 && Day.Value % DAY_IN_QUART == 0)
                 {
                     Day.Value = 0;
                     Quart.Value++;
                 }
 
-                if (Quart.Value != 0 && Quart.Value % 4 == 0)
+                if (Quart.Value != 0 && Quart.Value % QUART_IN_YEAR == 0)
                 {
                     Quart.Value = 0;
                     Year.Value++;
                 }
+
+                _sun.SetTick(t + Hour.Value * TICK_IN_HOUR);
             });
 
             Hour.Skip(1).Subscribe(h => Origin.Hour = h);
