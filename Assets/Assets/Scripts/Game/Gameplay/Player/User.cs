@@ -26,7 +26,7 @@ namespace AuroraWorld.Gameplay.Player
             var selectionSettings = _userSettings.SelectionSettings;
 
             // Изменение ландшафта на ПКМ и ЛКМ
-            _input.ClickPosition.Skip(1).Subscribe(data =>
+            _input.ClickUpPosition.Skip(1).Subscribe(data =>
             {
                 if (data.HasShift || data.HasAlt || data.HasCtrl) return;
                 var hexagonPosition = data.WorldPosition.WorldToHex().ToCube();
@@ -46,7 +46,7 @@ namespace AuroraWorld.Gameplay.Player
             });
 
             // Выделение гексов на СКМ
-            _input.ClickPosition.Skip(1).Subscribe(data =>
+            _input.ClickUpPosition.Skip(1).Subscribe(data =>
             {
                 // selection
                 if (data.HasShift || data.HasAlt || data.HasCtrl) return;
@@ -63,7 +63,7 @@ namespace AuroraWorld.Gameplay.Player
             _input.MouseMovedToHexagon.Skip(1).Subscribe(data => { });
 
             // Редактирование тумана войны
-            _input.ClickPosition.Skip(1).Subscribe(data =>
+            _input.ClickUpPosition.Skip(1).Subscribe(data =>
             {
                 if (!data.HasShift || data.HasAlt || data.HasCtrl) return;
 
