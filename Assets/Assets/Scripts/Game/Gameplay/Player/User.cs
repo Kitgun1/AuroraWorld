@@ -16,7 +16,7 @@ namespace AuroraWorld.Gameplay.Player
 
         private UserSettings _userSettings;
 
-        public void Run(DIContainer container)
+        public void Run(DIContainer container, Camera currentCamera)
         {
             _userSettings = new UserSettings();
             _mapSelections = new HexagonMapSelections();
@@ -86,6 +86,15 @@ namespace AuroraWorld.Gameplay.Player
                 {
                     worldProxy.Terrain.AttachChunkMesh(modified);
                 }
+            });
+
+            _input.AxesRawUpdate.Skip(1).Subscribe(data =>
+            {
+                var speed = data.Modifiers.OnlyShift
+                    ? _userSettings.CameraSettings.FastMoveSpeed.Value
+                    : _userSettings.CameraSettings.MoveSpeed.Value;
+                var delta = new Vector3(data.Vector.x, 0, data.Vector.y) * speed;
+                currentCamera.transform.position += delta;
             });
         }
     }

@@ -77,7 +77,7 @@ namespace AuroraWorld.Gameplay.Root
             input.Run(_container, user, camera);
             _container.RegisterInstance(input);
 
-            user.Run(_container);
+            user.Run(_container, camera);
         }
 
         private static Camera CameraRegister(Transform rootObject, Vector3 startPosition)
