@@ -27,11 +27,7 @@ namespace AuroraWorld.Gameplay.World.Geometry
             Terrain = new Terrain(container);
             Geography.SetSeed(seed);
 
-            Origin.Hexagons.ForEach(h =>
-            {
-                // TODO: Init neighbors
-                Hexagons.Add(h.Position, new HexagonProxy(h, Terrain.GetHexagonInfo(h.Position)));
-            });
+            Origin.Hexagons.ForEach(h => Hexagons.Add(h.Position, new HexagonProxy(h, Terrain.GetHexagonInfo(h.Position))));
 
             Hexagons.ObserveAdd().Subscribe(e => Origin.Hexagons.Add(e.Value.Value.Origin));
             Hexagons.ObserveRemove().Subscribe(e => Origin.Hexagons.Remove(e.Value.Value.Origin));

@@ -1,8 +1,6 @@
 using System.Linq;
 using AuroraWorld.App.GameResources;
 using AuroraWorld.GameRoot;
-using DG.Tweening;
-using DI;
 using UnityEngine;
 using LightType = UnityEngine.LightType;
 
