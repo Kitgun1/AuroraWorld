@@ -37,7 +37,7 @@ namespace AuroraWorld.GameRoot
             _coroutines = new GameObject("[COROUTINES]").AddComponent<Coroutines>();
             Object.DontDestroyOnLoad(_coroutines.gameObject);
 
-            var prefabUIRoot = Resources.Load<UIRootView>("UIRoot");
+            var prefabUIRoot = Resources.Load<UIRootView>("Prefabs/UIRoot");
             _uiRoot = Object.Instantiate(prefabUIRoot);
             Object.DontDestroyOnLoad(_uiRoot.gameObject);
             _rootContainer.RegisterInstance(_uiRoot);

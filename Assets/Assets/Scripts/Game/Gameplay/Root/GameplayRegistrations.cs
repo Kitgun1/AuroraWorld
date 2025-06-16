@@ -20,7 +20,7 @@ namespace AuroraWorld.Gameplay.Root
             return Observable.Create<Unit>(observer =>
             {
                 _container = container;
-                var geoSettings = Resources.Load<GeoConfiguration>("Configurations/Geo Settings");
+                var geoSettings = Resources.Load<GeoConfiguration>("Configurations/Geo/Geo Settings");
                 container.RegisterInstance(geoSettings);
 
                 var world = new GameObject("[WORLD]");

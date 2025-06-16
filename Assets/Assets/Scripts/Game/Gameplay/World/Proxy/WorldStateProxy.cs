@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using AuroraWorld.App.GameResources;
 using AuroraWorld.Gameplay.World.Data;
 using DI;
 using ObservableCollections;
@@ -15,11 +16,13 @@ namespace AuroraWorld.Gameplay.World.Geometry
         public WorldState Origin;
         public readonly Terrain Terrain;
         public readonly Dictionary<Vector3Int, ChunkMeshData> Chunks = new();
+        private readonly Resource<Material> _materialsResource;
 
         public WorldStateProxy(DIContainer container, WorldState origin, string seed, out Vector3Int startPosition)
         {
             Origin = origin;
             container.RegisterInstance(this);
+            _materialsResource = new Resource<Material>();
             _parentMesh = container.Resolve<Transform>("ParentMeshTransform");
             Terrain = new Terrain(container);
             Geography.SetSeed(seed);
@@ -64,7 +67,7 @@ namespace AuroraWorld.Gameplay.World.Geometry
             };
             filter.mesh = mesh;
             var renderer = chunk.AddComponent<MeshRenderer>();
-            var material = Resources.Load<Material>("Hexagon Map Material");
+            var material = _materialsResource.Load("Materials/Hexagon Map Material");
             material = new Material(material);
             renderer.material = material;
 

@@ -95,7 +95,7 @@ namespace AuroraWorld.Gameplay.Player
             var selectionObject = new GameObject("outline");
             var filter = selectionObject.AddComponent<MeshFilter>();
             var renderer = selectionObject.AddComponent<MeshRenderer>();
-            renderer.material = _selectionMaterialsResource.Load("Selection Material");
+            renderer.material = _selectionMaterialsResource.Load("Materials/Selection Material");
             var thickLineMesh = new ThickLineMesh();
             return new Selection(filter, renderer, thickLineMesh);
         }

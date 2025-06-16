@@ -8,6 +8,7 @@ namespace AuroraWorld.App.GameResources
     {
         private readonly Dictionary<string, T> _loadedResources = new();
 
+        /// <param name="path">Path to the asset in Resources folder (e.g., "Prefabs/Player")</param>
         public T Load(string path)
         {
             if (_loadedResources.TryGetValue(path, out var load)) return load;
