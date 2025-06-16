@@ -17,8 +17,8 @@ namespace AuroraWorld.Gameplay.Player
         public readonly Subject<MouseMovedToHexagon> MouseMovedToHexagon = new();
         public readonly Subject<KeyboardData> KeyboardClick = new();
         public readonly Subject<KeyboardData> KeyboardClickUp = new();
-        public readonly Subject<float> Axis = new();
-        public readonly Subject<float> AxisRaw = new();
+        public readonly Subject<AxesData> AxesUpdate = new();
+        public readonly Subject<AxesData> AxesRawUpdate = new();
 
         private DIContainer _container;
         private Camera _camera;
@@ -86,10 +86,7 @@ namespace AuroraWorld.Gameplay.Player
                 {
                     var keyboardData = new KeyboardData
                     {
-                        HasAlt = Input.GetKey(KeyCode.LeftAlt),
-                        HasCtrl = Input.GetKey(KeyCode.LeftControl),
-                        HasShift = Input.GetKey(KeyCode.LeftShift),
-                        HasCapsLock = Input.GetKey(KeyCode.CapsLock)
+                        Modifiers = GetCurrentModifiers()
                     };
                     foreach (KeyCode keyKode in Enum.GetValues(typeof(KeyCode)))
                     {
@@ -107,10 +104,7 @@ namespace AuroraWorld.Gameplay.Player
                 {
                     var keyboardData = new KeyboardData
                     {
-                        HasAlt = Input.GetKeyUp(KeyCode.LeftAlt),
-                        HasCtrl = Input.GetKeyUp(KeyCode.LeftControl),
-                        HasShift = Input.GetKeyUp(KeyCode.LeftShift),
-                        HasCapsLock = Input.GetKeyUp(KeyCode.CapsLock)
+                        Modifiers = GetCurrentModifiers()
                     };
                     foreach (KeyCode keyKode in Enum.GetValues(typeof(KeyCode)))
                     {
@@ -127,27 +121,27 @@ namespace AuroraWorld.Gameplay.Player
 
             #region Axis actions
 
-            var axes = new[] { "Horizontal", "Vertical" };
-            foreach (var axis in axes)
-            {
-                var oldAxisValue = 0f;
-                Observable.EveryUpdate().Where(_ => Input.GetAxis(axis) != oldAxisValue)
-                    .Subscribe(_ =>
+            Observable.EveryUpdate().Subscribe(_ =>
+                {
+                    AxesUpdate.OnNext(new AxesData
                     {
-                        oldAxisValue = Input.GetAxis(axis);
-                        Axis.OnNext(oldAxisValue);
-                    })
-                    .AddTo(monoBehaviour);
+                        Horizontal = Input.GetAxis("Horizontal"),
+                        Vertical = Input.GetAxis("Vertical"),
+                        Modifiers = GetCurrentModifiers()
+                    });
+                })
+                .AddTo(monoBehaviour);
 
-                var oldAxisRawValue = 0f;
-                Observable.EveryUpdate().Where(_ => Input.GetAxisRaw(axis) != oldAxisRawValue)
-                    .Subscribe(_ =>
+            Observable.EveryUpdate().Subscribe(_ =>
+                {
+                    AxesRawUpdate.OnNext(new AxesData
                     {
-                        oldAxisRawValue = Input.GetAxisRaw(axis);
-                        AxisRaw.OnNext(oldAxisRawValue);
-                    })
-                    .AddTo(monoBehaviour);
-            }
+                        Horizontal = Input.GetAxisRaw("Horizontal"),
+                        Vertical = Input.GetAxisRaw("Vertical"),
+                        Modifiers = GetCurrentModifiers()
+                    });
+                })
+                .AddTo(monoBehaviour);
 
             #endregion
         }
@@ -156,10 +150,7 @@ namespace AuroraWorld.Gameplay.Player
         {
             var screenPosition = Input.mousePosition;
             var worldPoint = ToWorldPosition(screenPosition);
-            property.Value = new ClickData(index, screenPosition, worldPoint,
-                ctrl: Input.GetKey(KeyCode.LeftControl),
-                shift: Input.GetKey(KeyCode.LeftShift),
-                alt: Input.GetKey(KeyCode.LeftAlt));
+            property.Value = new ClickData(index, screenPosition, worldPoint, GetCurrentModifiers());
         }
 
         private Vector3 ToWorldPosition(Vector3 screenPosition)
@@ -193,5 +184,13 @@ namespace AuroraWorld.Gameplay.Player
 
             return worldPoint;
         }
+
+        private Modifiers GetCurrentModifiers() => new()
+        {
+            HasAlt = Input.GetKey(KeyCode.LeftAlt),
+            HasCtrl = Input.GetKey(KeyCode.LeftControl),
+            HasShift = Input.GetKey(KeyCode.LeftShift),
+            HasCapsLock = Input.GetKey(KeyCode.CapsLock)
+        };
     }
 }

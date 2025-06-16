@@ -1,10 +1,10 @@
 using System.Collections.Generic;
 using System.Linq;
-using AuroraWorld.Gameplay.World.Data;
 using AuroraWorld.Gameplay.World.Geometry;
 using DI;
 using R3;
 using UnityEngine;
+using FogOfWarState = AuroraWorld.Gameplay.World.Data.FogOfWarState;
 
 namespace AuroraWorld.Gameplay.Player
 {
@@ -28,7 +28,7 @@ namespace AuroraWorld.Gameplay.Player
             // Изменение ландшафта на ПКМ и ЛКМ
             _input.ClickUpPosition.Skip(1).Subscribe(data =>
             {
-                if (data.HasShift || data.HasAlt || data.HasCtrl) return;
+                if (data.Modifiers.Any) return;
                 var hexagonPosition = data.WorldPosition.WorldToHex().ToCube();
                 var worldProxy = container.Resolve<WorldStateProxy>();
                 var changeValue = data.MouseButton switch
@@ -49,7 +49,7 @@ namespace AuroraWorld.Gameplay.Player
             _input.ClickUpPosition.Skip(1).Subscribe(data =>
             {
                 // selection
-                if (data.HasShift || data.HasAlt || data.HasCtrl) return;
+                if (data.Modifiers.Any) return;
                 if (data.MouseButton != 2) return;
                 var hexagonPosition = data.WorldPosition.WorldToHex().ToCube();
                 var worldProxy = container.Resolve<WorldStateProxy>();
@@ -65,7 +65,7 @@ namespace AuroraWorld.Gameplay.Player
             // Редактирование тумана войны
             _input.ClickUpPosition.Skip(1).Subscribe(data =>
             {
-                if (!data.HasShift || data.HasAlt || data.HasCtrl) return;
+                if (!data.Modifiers.OnlyShift) return;
 
                 var hexagonPosition = data.WorldPosition.WorldToCube();
                 var worldProxy = container.Resolve<WorldStateProxy>();

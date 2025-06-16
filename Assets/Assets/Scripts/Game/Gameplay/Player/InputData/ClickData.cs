@@ -7,18 +7,14 @@ namespace AuroraWorld.Gameplay.Player.InputData
         public readonly int MouseButton;
         public Vector3 ScreenPosition;
         public Vector3 WorldPosition;
-        public bool HasCtrl;
-        public bool HasShift;
-        public bool HasAlt;
+        public Modifiers Modifiers;
 
-        public ClickData(int mouseButton, Vector3 screen, Vector3 world, bool ctrl, bool shift, bool alt)
+        public ClickData(int mouseButton, Vector3 screen, Vector3 world, Modifiers modifiers)
         {
             MouseButton = mouseButton;
             ScreenPosition = screen;
             WorldPosition = world;
-            HasCtrl = ctrl;
-            HasShift = shift;
-            HasAlt = alt;
+            Modifiers = modifiers;
         }
     }
 }
