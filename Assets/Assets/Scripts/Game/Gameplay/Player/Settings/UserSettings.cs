@@ -18,8 +18,8 @@ namespace AuroraWorld.Gameplay.Player
 
             CameraSettings = new CameraSettingsProxy(new CameraSettings()
             {
-                MoveSpeed = 0.3f,
-                FastMoveSpeed = 0.6f 
+                MoveSpeed = 0.1f,
+                FastMoveSpeed = 0.2f 
             });
         }
     }
