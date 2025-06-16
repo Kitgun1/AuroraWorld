@@ -60,7 +60,6 @@ namespace AuroraWorld.Gameplay.Player
                     .ToArray();
                 _mapSelections.AttachSelection("selected", selectionSettings, worldProxy.Terrain, hexagons);
             });
-            _input.MouseMovedToHexagon.Skip(1).Subscribe(data => { });
 
             // Редактирование тумана войны
             _input.ClickUpPosition.Skip(1).Subscribe(data =>
@@ -87,7 +86,8 @@ namespace AuroraWorld.Gameplay.Player
                     worldProxy.Terrain.AttachChunkMesh(modified);
                 }
             });
-
+            
+            // Движение камеры
             _input.AxesRawUpdate.Skip(1).Subscribe(data =>
             {
                 var speed = data.Modifiers.OnlyShift

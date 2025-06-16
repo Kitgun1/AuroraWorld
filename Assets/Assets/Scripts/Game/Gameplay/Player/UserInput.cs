@@ -5,14 +5,16 @@ using AuroraWorld.Gameplay.World.Geometry;
 using DI;
 using R3;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace AuroraWorld.Gameplay.Player
 {
     public class UserInput
     {
-        public readonly ReactiveProperty<ClickData> ClickPosition = new();
-        public readonly ReactiveProperty<ClickData> ClickUpPosition = new();
-        public readonly ReactiveProperty<ClickData> ClickDownPosition = new();
+        public readonly Subject<ClickData> ClickPosition = new();
+        public readonly Subject<ClickData> ClickUpPosition = new();
+        public readonly Subject<ClickData> ClickDownPosition = new();
+        public readonly Subject<MouseScrollData> MouseScroll = new();
         public readonly Subject<MouseMoveData> MouseMove = new();
         public readonly Subject<MouseMovedToHexagon> MouseMovedToHexagon = new();
         public readonly Subject<KeyboardData> KeyboardClick = new();
@@ -53,6 +55,18 @@ namespace AuroraWorld.Gameplay.Player
                     .AddTo(monoBehaviour);
             }
 
+            float oldScrollDelta = 0;
+            Observable.EveryUpdate().Where(_ => oldScrollDelta != Input.mouseScrollDelta.y)
+                .Subscribe(_ =>
+                {
+                    MouseScroll.OnNext(new MouseScrollData()
+                    {
+                        Delta = oldScrollDelta = Input.mouseScrollDelta.y,
+                        Modifiers = GetCurrentModifiers(),
+                        IsPointerOverUI = EventSystem.current.IsPointerOverGameObject()
+                    });
+                }).AddTo(monoBehaviour);
+
             Vector3 oldMousePosition = Vector3.zero;
             Observable.EveryUpdate().Where(_ => Input.mousePosition != oldMousePosition)
                 .Subscribe(_ =>
@@ -61,7 +75,8 @@ namespace AuroraWorld.Gameplay.Player
                     MouseMove.OnNext(new MouseMoveData
                     {
                         ScreenPosition = oldMousePosition,
-                        WorldPosition = ToWorldPosition(oldMousePosition)
+                        WorldPosition = ToWorldPosition(oldMousePosition),
+                        IsPointerOverUI = EventSystem.current.IsPointerOverGameObject()
                     });
                 })
                 .AddTo(monoBehaviour);
@@ -74,7 +89,8 @@ namespace AuroraWorld.Gameplay.Player
                     MouseMovedToHexagon.OnNext(new MouseMovedToHexagon
                     {
                         ScreenPosition = Input.mousePosition,
-                        CubePosition = oldHexagonPosition
+                        CubePosition = oldHexagonPosition,
+                        IsPointerOverUI = EventSystem.current.IsPointerOverGameObject()
                     });
                 })
                 .AddTo(monoBehaviour);
@@ -146,11 +162,12 @@ namespace AuroraWorld.Gameplay.Player
             #endregion
         }
 
-        private void ClickHandler(ReactiveProperty<ClickData> property, int index)
+        private void ClickHandler(Subject<ClickData> property, int index)
         {
             var screenPosition = Input.mousePosition;
             var worldPoint = ToWorldPosition(screenPosition);
-            property.Value = new ClickData(index, screenPosition, worldPoint, GetCurrentModifiers());
+            property.OnNext(new ClickData(index, screenPosition, worldPoint, GetCurrentModifiers(),
+                EventSystem.current.IsPointerOverGameObject()));
         }
 
         private Vector3 ToWorldPosition(Vector3 screenPosition)

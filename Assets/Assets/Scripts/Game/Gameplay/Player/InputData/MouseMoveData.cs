@@ -6,5 +6,6 @@ namespace AuroraWorld.Gameplay.Player.InputData
     {
         public Vector3 ScreenPosition;
         public Vector3 WorldPosition;
+        public bool IsPointerOverUI;
     }
 }
