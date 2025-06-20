@@ -41,6 +41,8 @@ namespace AuroraWorld.Gameplay.Root
                     observer.OnCompleted();
                 });
 
+                ColonyRegister();
+
                 return Disposable.Empty;
             });
         }
@@ -93,5 +95,12 @@ namespace AuroraWorld.Gameplay.Root
         }
 
         #endregion
+
+        private static void ColonyRegister()
+        {
+            var population = new Population(new Pawn("Васек",new PawnLocation(Vector3Int.zero)));
+            var colony = new Colony(population);
+            _container.RegisterInstance(colony);
+        }
     }
 }
