@@ -9,9 +9,10 @@ namespace AuroraWorld.Gameplay.World
         public Vector3Int Position;
         public HexagonWorldInfo WorldInfo;
 
-        public Hexagon(Vector3Int position)
+        public Hexagon(Vector3Int position, HexagonWorldInfo worldInfo)
         {
             Position = position;
+            WorldInfo = worldInfo;
         }
     }
 }

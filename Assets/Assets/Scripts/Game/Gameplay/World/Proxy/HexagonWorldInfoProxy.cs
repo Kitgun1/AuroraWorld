@@ -14,7 +14,7 @@ namespace AuroraWorld.Gameplay.World
         public ReactiveProperty<float> Humidity { get; }
         public ReactiveProperty<FogOfWarState> FogOfWar { get; }
 
-        public HexagonWorldInfo Origin;
+        public readonly HexagonWorldInfo Origin;
 
         public HexagonWorldInfoProxy(HexagonWorldInfo origin)
         {
@@ -27,10 +27,7 @@ namespace AuroraWorld.Gameplay.World
             FogOfWar = new ReactiveProperty<FogOfWarState>(Origin.FogOfWarState);
 
             IsLand.Skip(1).Subscribe(v => Origin.IsLand = v);
-            Elevation.Skip(1).Subscribe(v =>
-            {
-                Origin.Elevation = Mathf.RoundToInt(v / GeometryHexagon.ELEVATION_STEP);
-            });
+            Elevation.Skip(1).Subscribe(v => Origin.Elevation = v);
             Temperature.Skip(1).Subscribe(v => Origin.Temperature = v);
             Humidity.Skip(1).Subscribe(v => Origin.Humidity = v);
             FogOfWar.Skip(1).Subscribe(v => Origin.FogOfWarState = v);

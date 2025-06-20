@@ -15,9 +15,9 @@ namespace AuroraWorld.Gameplay.World
 
         public readonly Terrain Terrain;
         public readonly Dictionary<Vector3Int, ChunkMeshData> Chunks = new();
-        
+
         public readonly WorldState Origin;
-        
+
         private readonly Resource<Material> _materialsResource;
         private readonly Transform _parentMesh;
 
@@ -25,27 +25,45 @@ namespace AuroraWorld.Gameplay.World
         {
             Origin = origin;
             Seed = Origin.Seed;
-            
+
             container.RegisterInstance(this);
-            Geography.SetSeed(Origin.Seed);
-            
+            Geography.SetSeed(Seed);
+
             Terrain = new Terrain(container);
-            
+
             _materialsResource = new Resource<Material>();
             _parentMesh = container.Resolve<Transform>("ParentMeshTransform");
 
-            Origin.Hexagons.ForEach(h => Hexagons.Add(h.Position, new HexagonProxy(h, Terrain.GetHexagonInfo(h.Position))));
+            Origin.Hexagons.ForEach(h =>
+            {
+                var hexPoxy = new HexagonProxy(h);
+                hexPoxy.WorldInfoProxy.Elevation.Skip(1).Subscribe(v => Terrain.ElevationModified(hexPoxy, v));
+                hexPoxy.WorldInfoProxy.IsLand.Skip(1).Subscribe(v => Terrain.LandStateModified(hexPoxy, v));
+                hexPoxy.WorldInfoProxy.FogOfWar.Skip(1).Subscribe(v => Terrain.FogOfWarModified(hexPoxy, v));
+                Hexagons.Add(h.Position, hexPoxy);
+            });
 
             Hexagons.ObserveAdd().Subscribe(e => Origin.Hexagons.Add(e.Value.Value.Origin));
             Hexagons.ObserveRemove().Subscribe(e => Origin.Hexagons.Remove(e.Value.Value.Origin));
 
-            startPosition = Terrain.FindLand();
-            var rangeVisible = CubeMath.Range(startPosition, 8);
             var chunkUpdated = new HashSet<Vector3Int>();
-            foreach (var hexagonPosition in rangeVisible)
+            if (Hexagons.Count > 0)
             {
-                Terrain.AttachHexagon(hexagonPosition, out var modifiedChunks, FogOfWarState.Visible);
-                foreach (var modifiedChunk in modifiedChunks) chunkUpdated.Add(modifiedChunk);
+                startPosition = Vector3Int.one;
+                foreach (var hexagonPair in Hexagons)
+                {
+                    chunkUpdated.Add(hexagonPair.Value.ChunkPosition);
+                }
+            }
+            else
+            {
+                startPosition = Terrain.FindLand();
+                var rangeVisible = CubeMath.Range(startPosition, 8);
+                foreach (var hexagonPosition in rangeVisible)
+                {
+                    Terrain.AttachHexagon(hexagonPosition, out var modifiedChunks, FogOfWarState.Visible);
+                    foreach (var modifiedChunk in modifiedChunks) chunkUpdated.Add(modifiedChunk);
+                }
             }
 
             foreach (var chunkPosition in chunkUpdated)

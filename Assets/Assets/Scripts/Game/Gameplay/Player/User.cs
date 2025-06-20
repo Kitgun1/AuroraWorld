@@ -28,7 +28,7 @@ namespace AuroraWorld.Gameplay.Player
 
             // Изменение ландшафта на ПКМ и ЛКМ
             _input.ClickUpPosition.Skip(1)
-                .Where(data => !data.Modifiers.All && !data.IsPointerOverUI)
+                .Where(data => !data.Modifiers.Any && !data.IsPointerOverUI)
                 .Subscribe(data =>
                 {
                     var hexagonPosition = data.WorldPosition.WorldToHex().ToCube();
@@ -43,13 +43,13 @@ namespace AuroraWorld.Gameplay.Player
                     if (attachedHexagon != null)
                     {
                         attachedHexagon.WorldInfoProxy.Elevation.Value += changeValue;
-                        worldProxy.Terrain.AttachChunkMesh(hexagonPosition);
+                        worldProxy.Terrain.AttachChunkMesh(ChunkUtils.CubeToChunk(hexagonPosition));
                     }
                 });
 
             // Выделение гексов на СКМ
             _input.ClickUpPosition.Skip(1)
-                .Where(data => !data.Modifiers.All && data is { MouseButton: 2, IsPointerOverUI: false })
+                .Where(data => !data.Modifiers.Any && data is { MouseButton: 2, IsPointerOverUI: false })
                 .Subscribe(data =>
                 {
                     // selection
@@ -97,7 +97,7 @@ namespace AuroraWorld.Gameplay.Player
                     : _userSettings.CameraSettings.MoveSpeed.Value;
                 
                 var cameraPosition = currentCamera.transform.position;
-                float elevation = terrain.GetHexagonInfo(cameraPosition.WorldToCube()).Elevation.Value;
+                float elevation = terrain.GetHexagonInfo(cameraPosition.WorldToCube()).Elevation;
                 elevation /= GeometryHexagon.ELEVATION_MODIFER;
                 var delta = new Vector3(data.Vector.x, 0, data.Vector.y) * speed;
 
@@ -110,7 +110,7 @@ namespace AuroraWorld.Gameplay.Player
             _input.MouseScroll.Skip(1).Where(data => !data.IsPointerOverUI).Subscribe(data =>
             {
                 var cameraPosition = currentCamera.transform.position;
-                float elevation = terrain.GetHexagonInfo(cameraPosition.WorldToCube()).Elevation.Value;
+                float elevation = terrain.GetHexagonInfo(cameraPosition.WorldToCube()).Elevation;
                 elevation /= GeometryHexagon.ELEVATION_MODIFER;
                 if (elevation + 4 > cameraPosition.y - data.Delta || cameraPosition.y - data.Delta > 32) return;
                 currentCamera.transform.position += Vector3.down * data.Delta;

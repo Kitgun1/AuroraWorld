@@ -191,8 +191,7 @@ namespace AuroraWorld.Gameplay.Player
                 var line = CubeMath.Line(ray.origin.WorldToCube(), worldPoint.WorldToCube());
                 foreach (var cubePosition in line)
                 {
-                    var elevation = terrain.GetHexagonInfo(cubePosition).Elevation.Value /
-                                    GeometryHexagon.ELEVATION_MODIFER;
+                    var elevation = terrain.GetHexagonInfo(cubePosition).Elevation / GeometryHexagon.ELEVATION_MODIFER;
                     distanceToGround = (ray.origin.y - elevation) / -ray.direction.y;
                     worldPoint = ray.origin + ray.direction * distanceToGround;
                     worldPoint.y = elevation;

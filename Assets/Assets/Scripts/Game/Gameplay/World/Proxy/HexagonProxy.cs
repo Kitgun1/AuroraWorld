@@ -16,14 +16,14 @@ namespace AuroraWorld.Gameplay.World
 
         public Hexagon Origin { get; }
 
-        public HexagonProxy(Hexagon origin, HexagonWorldInfoProxy hexagonWorldInfoProxy)
+        public HexagonProxy(Hexagon origin)
         {
             if (origin.Position.x + origin.Position.y + origin.Position.z != 0)
                 throw new Exception("q + r + s is not 0!");
             Position = origin.Position;
             Origin = origin;
 
-            WorldInfoProxy = hexagonWorldInfoProxy;
+            WorldInfoProxy = new HexagonWorldInfoProxy(Origin.WorldInfo);
         }
 
         public HexagonProxy ClearMesh()

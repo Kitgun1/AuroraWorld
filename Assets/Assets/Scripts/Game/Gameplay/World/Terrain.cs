@@ -39,10 +39,10 @@ namespace AuroraWorld.Gameplay.World
 
                     // Осушаем при высоте выше уровня моря и сосед с водой не выше высоты моря
                     var hasWaterSource = neighbors.Any(i =>
-                        !i.IsLand.Value &&
-                        i.Elevation.Value > _geo.LandMinElevation &&
-                        i.Elevation.Value <= info.Elevation.Value &&
-                        _dirtyHexagons.All(d => d.WorldInfoProxy != i)
+                        !i.IsLand &&
+                        i.Elevation > _geo.LandMinElevation &&
+                        i.Elevation <= info.Elevation.Value &&
+                        _dirtyHexagons.All(d => d.WorldInfoProxy.Origin != i)
                     );
                     if (info.Elevation.Value >= _geo.LandMinElevation && !hasWaterSource)
                     {
@@ -64,7 +64,7 @@ namespace AuroraWorld.Gameplay.World
                         .ToArray();
 
                     // Делаем водой при высоте ниже уровня моря и при наличии воды рядом
-                    var hasWaterNeighbor = neighbors.Any(i => !i.IsLand.Value);
+                    var hasWaterNeighbor = neighbors.Any(i => !i.IsLand);
                     if (info.Elevation.Value < _geo.LandMinElevation && hasWaterNeighbor)
                     {
                         info.IsLand.Value = false;
@@ -76,7 +76,7 @@ namespace AuroraWorld.Gameplay.World
                     }
 
                     // Делаем водой при наличии рядом воды выше/равной текущей высоты
-                    if (neighbors.Any(n => !n.IsLand.Value && info.Elevation.Value <= n.Elevation.Value))
+                    if (neighbors.Any(n => !n.IsLand && info.Elevation.Value <= n.Elevation))
                     {
                         info.IsLand.Value = false;
                         Array.ForEach(neighborPositions, n =>
@@ -98,81 +98,82 @@ namespace AuroraWorld.Gameplay.World
             });
         }
 
-        public HexagonWorldInfoProxy GetHexagonInfo(Vector3Int cube, FogOfWarState defaultState = FogOfWarState.Hidden)
+        public HexagonWorldInfo GetHexagonInfo(Vector3Int cube, FogOfWarState defaultState = FogOfWarState.Hidden)
         {
             var info = _worldStateProxy.Hexagons.GetValueOrDefault(cube)?.WorldInfoProxy;
-            if (info != null) return info;
+            if (info != null) return info.Origin;
             var axial = cube.ToHex();
 
             var elevation = _geo.GetElevation(axial);
-            var hexagonInfo = new HexagonWorldInfo();
-            var hexagonInfoProxy = new HexagonWorldInfoProxy(hexagonInfo);
-            hexagonInfoProxy.Elevation.Value = elevation;
-            hexagonInfoProxy.IsLand.Value = _geo.LandMinElevation <= elevation;
-            hexagonInfoProxy.Humidity.Value = _geo.GetHumidity(axial);
-            hexagonInfoProxy.Temperature.Value = _geo.GetTemperature(axial);
-            hexagonInfoProxy.FogOfWar.Value = defaultState;
+            var hexagonInfo = new HexagonWorldInfo
+            {
+                Elevation = elevation,
+                IsLand = _geo.LandMinElevation <= elevation,
+                Humidity = _geo.GetHumidity(axial),
+                Temperature = _geo.GetTemperature(axial),
+                FogOfWarState = defaultState
+            };
 
-            return hexagonInfoProxy;
+            return hexagonInfo;
         }
 
         public HexagonProxy AttachHexagon(Vector3Int cube, out HashSet<Vector3Int> modifiedChunks, FogOfWarState fogState = FogOfWarState.None)
         {
-            var hexEntityProxy = _worldStateProxy.Hexagons.GetValueOrDefault(cube);
+            var hexagonProxy = _worldStateProxy.Hexagons.GetValueOrDefault(cube);
             modifiedChunks = new HashSet<Vector3Int>();
-            if (hexEntityProxy != null)
+            if (hexagonProxy != null)
             {
-                if (fogState != FogOfWarState.None && hexEntityProxy.WorldInfoProxy.FogOfWar.Value != fogState)
+                if (fogState != FogOfWarState.None && hexagonProxy.WorldInfoProxy.FogOfWar.Value != fogState)
                 {
-                    hexEntityProxy.WorldInfoProxy.FogOfWar.Value = fogState;
-                    modifiedChunks.Add(hexEntityProxy.ChunkPosition);
-                    foreach (var neighbor in hexEntityProxy.Position.Neighbors())
+                    hexagonProxy.WorldInfoProxy.FogOfWar.Value = fogState;
+                    modifiedChunks.Add(hexagonProxy.ChunkPosition);
+                    foreach (var neighbor in hexagonProxy.Position.Neighbors())
                     {
                         modifiedChunks.Add(ChunkUtils.CubeToChunk(neighbor));
                     }
                 }
 
-                return hexEntityProxy;
+                return hexagonProxy;
             }
 
             if (fogState == FogOfWarState.None) fogState = FogOfWarState.Hidden;
 
-            var hexagonEntity = new Hexagon(cube);
-            hexEntityProxy = new HexagonProxy(hexagonEntity, GetHexagonInfo(cube, fogState));
-            hexEntityProxy.WorldInfoProxy.FogOfWar.Value = fogState;
-            _worldStateProxy.Hexagons.Add(cube, hexEntityProxy);
-            modifiedChunks.Add(hexEntityProxy.ChunkPosition);
-            foreach (var neighbor in hexEntityProxy.Position.Neighbors())
+            var hexagonEntity = new Hexagon(cube,GetHexagonInfo(cube, fogState));
+            hexagonProxy = new HexagonProxy(hexagonEntity);
+            hexagonProxy.WorldInfoProxy.FogOfWar.Value = fogState;
+            _worldStateProxy.Hexagons.Add(cube, hexagonProxy);
+            modifiedChunks.Add(hexagonProxy.ChunkPosition);
+            foreach (var neighbor in hexagonProxy.Position.Neighbors())
             {
                 modifiedChunks.Add(ChunkUtils.CubeToChunk(neighbor));
             }
 
-            hexEntityProxy.WorldInfoProxy.Elevation.Skip(1).Subscribe(v => ElevationModified(hexEntityProxy, v));
-            hexEntityProxy.WorldInfoProxy.IsLand.Skip(1).Subscribe(v => LandStateModified(hexEntityProxy, v));
-            hexEntityProxy.WorldInfoProxy.FogOfWar.Skip(1).Subscribe(v => FogOfWarModified(hexEntityProxy, v));
+            hexagonProxy.WorldInfoProxy.Elevation.Skip(1).Subscribe(v => ElevationModified(hexagonProxy, v));
+            hexagonProxy.WorldInfoProxy.IsLand.Skip(1).Subscribe(v => LandStateModified(hexagonProxy, v));
+            hexagonProxy.WorldInfoProxy.FogOfWar.Skip(1).Subscribe(v => FogOfWarModified(hexagonProxy, v));
 
-            return hexEntityProxy;
-
-            void ElevationModified(HexagonProxy entityProxy, float elevation)
-            {
-                var changedChunks = ChunkUtils.GetModifiedChunks(entityProxy.Position.Neighbors());
-                foreach (var chunk in changedChunks)
-                {
-                    AttachChunkMesh(chunk);
-                }
-
-                _dirtyHexagons.Add(entityProxy);
-            }
-
-            void LandStateModified(HexagonProxy entityProxy, bool isLand)
-            {
-            }
-
-            void FogOfWarModified(HexagonProxy entityProxy, FogOfWarState state)
-            {
-            }
+            return hexagonProxy;
         }
 
+        public void ElevationModified(HexagonProxy entityProxy, float elevation)
+        {
+            var changedChunks = ChunkUtils.GetModifiedChunks(entityProxy.Position.Neighbors());
+            foreach (var chunk in changedChunks)
+            {
+                AttachChunkMesh(chunk);
+            }
+
+            _dirtyHexagons.Add(entityProxy);
+        }
+
+        public void LandStateModified(HexagonProxy entityProxy, bool isLand)
+        {
+        }
+
+        public void FogOfWarModified(HexagonProxy entityProxy, FogOfWarState state)
+        {
+        }
+        
         public void AttachChunkMesh(Vector3Int chunkPosition)
         {
             var hexagons = _worldStateProxy.Hexagons
@@ -252,7 +253,7 @@ namespace AuroraWorld.Gameplay.World
 
             bool CheckRadiusLand(Vector3Int land, int r = 1)
             {
-                return CubeMath.Range(land, r).All(n => GetHexagonInfo(n).IsLand.Value);
+                return CubeMath.Range(land, r).All(n => GetHexagonInfo(n).IsLand);
             }
         }
 

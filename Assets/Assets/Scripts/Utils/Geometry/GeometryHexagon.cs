@@ -64,7 +64,7 @@ namespace AuroraWorld.Gameplay.World.Geometry
             {
                 var direction = (DirectionType)(i - 1);
                 var neighborPosition = cube.Neighbor(direction);
-                var neighborElevation = terrain.GetHexagonInfo(neighborPosition).Elevation.Value;
+                var neighborElevation = terrain.GetHexagonInfo(neighborPosition).Elevation;
                 var neighborVertices = GetVertices(neighborPosition.CubeToWorld(neighborElevation));
 
                 // Внутренняя грань
@@ -177,7 +177,7 @@ namespace AuroraWorld.Gameplay.World.Geometry
                 var neighborPosition = position.Neighbor(innerEdge.Direction);
                 var neighborInfo = terrain.GetHexagonInfo(neighborPosition);
                 
-                if (neighborInfo.FogOfWar.Value == FogOfWarState.Hidden)
+                if (neighborInfo.FogOfWarState == FogOfWarState.Hidden)
                 {
                     continue;
                 }
@@ -189,8 +189,8 @@ namespace AuroraWorld.Gameplay.World.Geometry
 
                 addedUVs2.AddRange(new[] { Vector2.zero, Vector2.zero, Vector2.zero, Vector2.zero });
 
-                var neighborVertexColor = neighborInfo.GetBiomeColor(neighborPosition);
-                var neighborHidden = neighborInfo.FogOfWar.Value == FogOfWarState.Hidden;
+                var neighborVertexColor = new HexagonWorldInfoProxy(neighborInfo).GetBiomeColor(neighborPosition);
+                var neighborHidden = neighborInfo.FogOfWarState == FogOfWarState.Hidden;
                 var selfHidden = baseColor.a == 0;
                 var selfColor = neighborHidden ? neighborVertexColor : baseColor;
                 var neighborColor = selfHidden ? baseColor : neighborVertexColor;
@@ -213,12 +213,14 @@ namespace AuroraWorld.Gameplay.World.Geometry
 
                 var neighbor1Position = position.Neighbor(outerEdge.Direction);
                 var neighbor1Info = terrain.GetHexagonInfo(neighbor1Position);
+                var neighbor1InfoProxy = new HexagonWorldInfoProxy(neighbor1Info);
                 
                 var neighbor2Position = position.Neighbor(beforeOuterEdge.Direction);
                 var neighbor2Info = terrain.GetHexagonInfo(neighbor2Position);
+                var neighbor2InfoProxy = new HexagonWorldInfoProxy(neighbor2Info);
                 
-                if (neighbor1Info.FogOfWar.Value == FogOfWarState.Hidden ||
-                    neighbor2Info.FogOfWar.Value == FogOfWarState.Hidden)
+                if (neighbor1Info.FogOfWarState == FogOfWarState.Hidden ||
+                    neighbor2Info.FogOfWarState == FogOfWarState.Hidden)
                 {
                     continue;
                 }
@@ -229,11 +231,11 @@ namespace AuroraWorld.Gameplay.World.Geometry
 
                 addedUVs2.AddRange(new[] { Vector2.zero, Vector2.zero, Vector2.zero });
 
-                var neighbor1VertexColor = neighbor1Info.GetBiomeColor(neighbor1Position);
-                var neighbor1Hidden = neighbor1Info.FogOfWar.Value == FogOfWarState.Hidden;
+                var neighbor1VertexColor = neighbor1InfoProxy.GetBiomeColor(neighbor1Position);
+                var neighbor1Hidden = neighbor1Info.FogOfWarState == FogOfWarState.Hidden;
 
-                var neighbor2VertexColor = neighbor2Info.GetBiomeColor(neighbor2Position);
-                var neighbor2Hidden = neighbor2Info.FogOfWar.Value == FogOfWarState.Hidden;
+                var neighbor2VertexColor = neighbor2InfoProxy.GetBiomeColor(neighbor2Position);
+                var neighbor2Hidden = neighbor2Info.FogOfWarState == FogOfWarState.Hidden;
 
                 var selfHidden = baseColor.a == 0;
                 var selfColor = neighbor1Hidden
