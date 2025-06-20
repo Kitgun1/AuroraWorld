@@ -57,7 +57,7 @@ namespace AuroraWorld.GameRoot
                     _coroutines.StartCoroutine(LoadAndStartLobby(lobbyEnterParams));
                     return;
                 case Scenes.GAMEPLAY:
-                    var gameplayEnterParams = new GameplayEnterParams(Guid.NewGuid().ToString());
+                    var gameplayEnterParams = new GameplayEnterParams("sandbox");
                     _coroutines.StartCoroutine(LoadAndStartGameplay(gameplayEnterParams));
                     return;
             }

@@ -26,7 +26,8 @@ namespace AuroraWorld.App.Lobby.Root
             var exitSceneSignalSubject = new Subject<Unit>();
             uiScene.Bind(exitSceneSignalSubject);
 
-            var gameplayEnterParams = new GameplayEnterParams(Guid.NewGuid().ToString());
+            // TODO: Название мира выбираем в лобби
+            var gameplayEnterParams = new GameplayEnterParams("sandbox");
             var lobbyExitParams = new LobbyExitParams(gameplayEnterParams);
             var exitToLobbySceneSignal = exitSceneSignalSubject.Select(_ => lobbyExitParams);
 
