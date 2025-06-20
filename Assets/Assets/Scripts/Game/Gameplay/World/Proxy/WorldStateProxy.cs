@@ -10,22 +10,29 @@ namespace AuroraWorld.Gameplay.World
 {
     public class WorldStateProxy
     {
-        private readonly Transform _parentMesh;
+        public string Seed { get; }
         public ObservableDictionary<Vector3Int, HexagonProxy> Hexagons { get; } = new();
 
-        public WorldState Origin;
         public readonly Terrain Terrain;
         public readonly Dictionary<Vector3Int, ChunkMeshData> Chunks = new();
+        
+        public readonly WorldState Origin;
+        
         private readonly Resource<Material> _materialsResource;
+        private readonly Transform _parentMesh;
 
-        public WorldStateProxy(DIContainer container, WorldState origin, string seed, out Vector3Int startPosition)
+        public WorldStateProxy(DIContainer container, WorldState origin, out Vector3Int startPosition)
         {
             Origin = origin;
+            Seed = Origin.Seed;
+            
             container.RegisterInstance(this);
+            Geography.SetSeed(Origin.Seed);
+            
+            Terrain = new Terrain(container);
+            
             _materialsResource = new Resource<Material>();
             _parentMesh = container.Resolve<Transform>("ParentMeshTransform");
-            Terrain = new Terrain(container);
-            Geography.SetSeed(seed);
 
             Origin.Hexagons.ForEach(h => Hexagons.Add(h.Position, new HexagonProxy(h, Terrain.GetHexagonInfo(h.Position))));
 
