@@ -1,6 +1,6 @@
 using System;
 
-namespace AuroraWorld.Gameplay.World.Data
+namespace AuroraWorld.Gameplay.World
 {
     [Serializable]
     public class HexagonWorldInfo

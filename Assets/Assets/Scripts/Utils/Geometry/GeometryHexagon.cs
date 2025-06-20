@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Linq;
-using AuroraWorld.Gameplay.World.Data;
 using UnityEngine;
 using static UnityEngine.Mathf;
 using Vector3 = UnityEngine.Vector3;
@@ -178,7 +177,7 @@ namespace AuroraWorld.Gameplay.World.Geometry
                 var neighborPosition = position.Neighbor(innerEdge.Direction);
                 var neighborInfo = terrain.GetHexagonInfo(neighborPosition);
                 
-                if (neighborInfo.FogOfWarState.Value == FogOfWarState.Hidden)
+                if (neighborInfo.FogOfWar.Value == FogOfWarState.Hidden)
                 {
                     continue;
                 }
@@ -191,7 +190,7 @@ namespace AuroraWorld.Gameplay.World.Geometry
                 addedUVs2.AddRange(new[] { Vector2.zero, Vector2.zero, Vector2.zero, Vector2.zero });
 
                 var neighborVertexColor = neighborInfo.GetBiomeColor(neighborPosition);
-                var neighborHidden = neighborInfo.FogOfWarState.Value == FogOfWarState.Hidden;
+                var neighborHidden = neighborInfo.FogOfWar.Value == FogOfWarState.Hidden;
                 var selfHidden = baseColor.a == 0;
                 var selfColor = neighborHidden ? neighborVertexColor : baseColor;
                 var neighborColor = selfHidden ? baseColor : neighborVertexColor;
@@ -218,8 +217,8 @@ namespace AuroraWorld.Gameplay.World.Geometry
                 var neighbor2Position = position.Neighbor(beforeOuterEdge.Direction);
                 var neighbor2Info = terrain.GetHexagonInfo(neighbor2Position);
                 
-                if (neighbor1Info.FogOfWarState.Value == FogOfWarState.Hidden ||
-                    neighbor2Info.FogOfWarState.Value == FogOfWarState.Hidden)
+                if (neighbor1Info.FogOfWar.Value == FogOfWarState.Hidden ||
+                    neighbor2Info.FogOfWar.Value == FogOfWarState.Hidden)
                 {
                     continue;
                 }
@@ -231,10 +230,10 @@ namespace AuroraWorld.Gameplay.World.Geometry
                 addedUVs2.AddRange(new[] { Vector2.zero, Vector2.zero, Vector2.zero });
 
                 var neighbor1VertexColor = neighbor1Info.GetBiomeColor(neighbor1Position);
-                var neighbor1Hidden = neighbor1Info.FogOfWarState.Value == FogOfWarState.Hidden;
+                var neighbor1Hidden = neighbor1Info.FogOfWar.Value == FogOfWarState.Hidden;
 
                 var neighbor2VertexColor = neighbor2Info.GetBiomeColor(neighbor2Position);
-                var neighbor2Hidden = neighbor2Info.FogOfWarState.Value == FogOfWarState.Hidden;
+                var neighbor2Hidden = neighbor2Info.FogOfWar.Value == FogOfWarState.Hidden;
 
                 var selfHidden = baseColor.a == 0;
                 var selfColor = neighbor1Hidden

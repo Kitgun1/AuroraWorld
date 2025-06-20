@@ -1,8 +1,7 @@
 using System;
-using AuroraWorld.Gameplay.World.Data;
 using UnityEngine;
 
-namespace AuroraWorld.Gameplay.World.Geometry
+namespace AuroraWorld.Gameplay.World
 {
     [Serializable]
     public class Hexagon

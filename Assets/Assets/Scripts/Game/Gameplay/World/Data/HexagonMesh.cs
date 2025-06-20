@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using AuroraWorld.Gameplay.World.Geometry;
 using UnityEngine;
 
-namespace AuroraWorld.Gameplay.World.Data
+namespace AuroraWorld.Gameplay.World
 {
     public class HexagonMesh
     {

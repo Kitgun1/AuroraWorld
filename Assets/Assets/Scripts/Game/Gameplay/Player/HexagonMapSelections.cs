@@ -4,6 +4,7 @@ using Assets.Scripts.Utils;
 using Assets.Utils.Coroutine;
 using AuroraWorld.App.GameResources;
 using AuroraWorld.Gameplay.Player.Proxy;
+using AuroraWorld.Gameplay.World;
 using AuroraWorld.Gameplay.World.Geometry;
 using UnityEngine;
 using Terrain = AuroraWorld.Gameplay.World.Terrain;

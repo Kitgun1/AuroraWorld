@@ -1,12 +1,12 @@
 using System.Collections.Generic;
 using AuroraWorld.App.GameResources;
-using AuroraWorld.Gameplay.World.Data;
+using AuroraWorld.Gameplay.World.Geometry;
 using DI;
 using ObservableCollections;
 using R3;
 using UnityEngine;
 
-namespace AuroraWorld.Gameplay.World.Geometry
+namespace AuroraWorld.Gameplay.World
 {
     public class WorldStateProxy
     {

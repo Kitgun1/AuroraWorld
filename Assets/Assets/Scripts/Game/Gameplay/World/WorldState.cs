@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace AuroraWorld.Gameplay.World.Geometry
+namespace AuroraWorld.Gameplay.World
 {
     [Serializable]
     public class WorldState

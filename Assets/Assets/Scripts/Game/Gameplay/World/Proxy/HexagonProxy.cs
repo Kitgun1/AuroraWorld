@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using AuroraWorld.Gameplay.World.Data;
+using AuroraWorld.Gameplay.World.Geometry;
 using UnityEngine;
 
-namespace AuroraWorld.Gameplay.World.Geometry
+namespace AuroraWorld.Gameplay.World
 {
     public class HexagonProxy
     {
@@ -35,7 +35,7 @@ namespace AuroraWorld.Gameplay.World.Geometry
 
         public HexagonProxy InitializeUpSideMesh()
         {
-            if (WorldInfoProxy.FogOfWarState.Value == FogOfWarState.Hidden)
+            if (WorldInfoProxy.FogOfWar.Value == FogOfWarState.Hidden)
             {
                 HexMesh = new HexagonMesh()
                 {
@@ -58,7 +58,7 @@ namespace AuroraWorld.Gameplay.World.Geometry
 
         public HexagonProxy InitializeBordersMesh(Terrain terrain)
         {
-            if (WorldInfoProxy.FogOfWarState.Value == FogOfWarState.Hidden)
+            if (WorldInfoProxy.FogOfWar.Value == FogOfWarState.Hidden)
             {
                 return this;
             }

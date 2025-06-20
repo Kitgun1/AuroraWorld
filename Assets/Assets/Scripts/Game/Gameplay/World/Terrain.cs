@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using AuroraWorld.Gameplay.GameplayTime;
-using AuroraWorld.Gameplay.World.Data;
 using AuroraWorld.Gameplay.World.Geometry;
 using DI;
 using R3;
@@ -112,7 +111,7 @@ namespace AuroraWorld.Gameplay.World
             hexagonInfoProxy.IsLand.Value = _geo.LandMinElevation <= elevation;
             hexagonInfoProxy.Humidity.Value = _geo.GetHumidity(axial);
             hexagonInfoProxy.Temperature.Value = _geo.GetTemperature(axial);
-            hexagonInfoProxy.FogOfWarState.Value = defaultState;
+            hexagonInfoProxy.FogOfWar.Value = defaultState;
 
             return hexagonInfoProxy;
         }
@@ -123,9 +122,9 @@ namespace AuroraWorld.Gameplay.World
             modifiedChunks = new HashSet<Vector3Int>();
             if (hexEntityProxy != null)
             {
-                if (fogState != FogOfWarState.None && hexEntityProxy.WorldInfoProxy.FogOfWarState.Value != fogState)
+                if (fogState != FogOfWarState.None && hexEntityProxy.WorldInfoProxy.FogOfWar.Value != fogState)
                 {
-                    hexEntityProxy.WorldInfoProxy.FogOfWarState.Value = fogState;
+                    hexEntityProxy.WorldInfoProxy.FogOfWar.Value = fogState;
                     modifiedChunks.Add(hexEntityProxy.ChunkPosition);
                     foreach (var neighbor in hexEntityProxy.Position.Neighbors())
                     {
@@ -140,7 +139,7 @@ namespace AuroraWorld.Gameplay.World
 
             var hexagonEntity = new Hexagon(cube);
             hexEntityProxy = new HexagonProxy(hexagonEntity, GetHexagonInfo(cube, fogState));
-            hexEntityProxy.WorldInfoProxy.FogOfWarState.Value = fogState;
+            hexEntityProxy.WorldInfoProxy.FogOfWar.Value = fogState;
             _worldStateProxy.Hexagons.Add(cube, hexEntityProxy);
             modifiedChunks.Add(hexEntityProxy.ChunkPosition);
             foreach (var neighbor in hexEntityProxy.Position.Neighbors())
@@ -150,7 +149,7 @@ namespace AuroraWorld.Gameplay.World
 
             hexEntityProxy.WorldInfoProxy.Elevation.Skip(1).Subscribe(v => ElevationModified(hexEntityProxy, v));
             hexEntityProxy.WorldInfoProxy.IsLand.Skip(1).Subscribe(v => LandStateModified(hexEntityProxy, v));
-            hexEntityProxy.WorldInfoProxy.FogOfWarState.Skip(1).Subscribe(v => FogOfWarModified(hexEntityProxy, v));
+            hexEntityProxy.WorldInfoProxy.FogOfWar.Skip(1).Subscribe(v => FogOfWarModified(hexEntityProxy, v));
 
             return hexEntityProxy;
 

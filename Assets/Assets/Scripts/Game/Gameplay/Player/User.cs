@@ -1,10 +1,10 @@
 using System.Collections.Generic;
 using System.Linq;
+using AuroraWorld.Gameplay.World;
 using AuroraWorld.Gameplay.World.Geometry;
 using DI;
 using R3;
 using UnityEngine;
-using FogOfWarState = AuroraWorld.Gameplay.World.Data.FogOfWarState;
 
 namespace AuroraWorld.Gameplay.Player
 {
