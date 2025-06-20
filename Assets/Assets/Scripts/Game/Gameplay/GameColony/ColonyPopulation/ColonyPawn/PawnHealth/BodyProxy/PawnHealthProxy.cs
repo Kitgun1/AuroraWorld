@@ -1,6 +1,6 @@
 using System.Linq;
 
-namespace AuroraWorld.Gameplay.GamePawn
+namespace AuroraWorld.Gameplay.GameColony
 {
     public class PawnHealthProxy
     {

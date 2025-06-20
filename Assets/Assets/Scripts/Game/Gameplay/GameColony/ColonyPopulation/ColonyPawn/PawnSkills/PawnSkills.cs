@@ -1,6 +1,6 @@
 using System;
 
-namespace AuroraWorld.Gameplay.GamePawn
+namespace AuroraWorld.Gameplay.GameColony
 {
     [Serializable]
     public class PawnSkills

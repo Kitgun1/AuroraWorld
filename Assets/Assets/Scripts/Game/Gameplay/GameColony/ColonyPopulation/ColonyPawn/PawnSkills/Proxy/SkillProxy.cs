@@ -1,11 +1,11 @@
 using R3;
 using UnityEngine;
 
-namespace AuroraWorld.Gameplay.GamePawn
+namespace AuroraWorld.Gameplay.GameColony
 {
     public class SkillProxy
     {
-        public string Name => Origin.Name;
+        public WorkType Type => Origin.Type;
         public int Interest => Origin.Interest;
         public readonly ReactiveProperty<int> Level;
         public readonly ReactiveProperty<int> Experience;

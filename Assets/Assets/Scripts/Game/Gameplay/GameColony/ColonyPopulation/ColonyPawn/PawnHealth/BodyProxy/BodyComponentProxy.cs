@@ -1,7 +1,7 @@
 using R3;
 using UnityEngine;
 
-namespace AuroraWorld.Gameplay.GamePawn
+namespace AuroraWorld.Gameplay.GameColony
 {
     public class BodyComponentProxy
     {

@@ -1,18 +1,18 @@
 using System;
 
-namespace AuroraWorld.Gameplay.GamePawn
+namespace AuroraWorld.Gameplay.GameColony
 {
     [Serializable]
     public class Skill
     {
-        public string Name;
+        public WorkType Type;
         public int Interest;
         public int Level;
         public int Experience;
 
-        public Skill(string name, int interest, int level, int experience)
+        public Skill(WorkType type, int interest, int level, int experience)
         {
-            Name = name;
+            Type = type;
             Interest = interest;
             Level = level;
             Experience = experience;

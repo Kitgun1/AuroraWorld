@@ -1,4 +1,4 @@
-namespace AuroraWorld.Gameplay.GamePawn
+namespace AuroraWorld.Gameplay.GameColony
 {
     public class PawnSkillsProxy
     {
@@ -15,6 +15,18 @@ namespace AuroraWorld.Gameplay.GamePawn
             {
                 Skills[i] = new SkillProxy(origin.Skills[i]);
             }
+        }
+
+        public override string ToString()
+        {
+            string result="";
+
+            foreach (var skill in Skills)
+            {
+                result += $"{skill.Type}: interest - {skill.Interest} ({skill.Level} lvl, {skill.Experience} exp)\n";
+            }
+            
+            return result;
         }
     }
 }
