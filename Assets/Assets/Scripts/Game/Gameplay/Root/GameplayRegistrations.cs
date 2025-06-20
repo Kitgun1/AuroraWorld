@@ -34,49 +34,56 @@ namespace AuroraWorld.Gameplay.Root
 
             return Observable.Create<Unit>(observer =>
             {
-                var disposable = new CompositeDisposable();
-
-                var completedCount = 0;
-                var totalOperation = 2;
-                
-                storage.Load($"{enterParams.WorldName}.WorldStateData", new WorldState())
-                    .Subscribe(worldState =>
-                    {
-                        _worldStateProxy = new WorldStateProxy(_container, worldState, out var startPosition);
-                        
-                        var user = new GameObject("[USER]").AddComponent<User>();
-                        var camera = CameraRegister(user.transform, startPosition);
-                        user.Run(_container, camera);
-
-                        var userInput = new UserInput();
-                        userInput.Run(_container, user, camera);
-                        _container.RegisterInstance(userInput);
-                        
-                        if (++completedCount == totalOperation)
-                        {
-                            observer.OnNext(Unit.Default);
-                            observer.OnCompleted();
-                        }
-                    })
-                    .AddTo(disposable);
-                
                 storage.Load($"{enterParams.WorldName}.GameTimeData", new Time())
                     .Subscribe(time =>
                     {
                         _timeProxy = new TimeProxy(_container, time);
-                        if (++completedCount == totalOperation)
+                        _timeProxy.Hour.Skip(1).Subscribe(_ =>
                         {
-                            observer.OnNext(Unit.Default);
-                            observer.OnCompleted();
-                        }
-                    })
-                    .AddTo(disposable);
+                            var canAutoSave = _timeProxy.Hours % 2 == 0;
+                            if(!canAutoSave) return;
+                            Debug.Log("save..");
+
+                            storage.Save($"{enterParams.WorldName}.GameTimeData", _timeProxy.Origin).Subscribe();
+                            storage.Save($"{enterParams.WorldName}.WorldStateData", _worldStateProxy.Origin).Subscribe();
+
+                        });
+                        
+                        storage.Load($"{enterParams.WorldName}.WorldStateData", new WorldState() { Seed = "sandbox" })
+                            .Subscribe(worldState =>
+                            {
+                                _worldStateProxy = new WorldStateProxy(_container, worldState, out var startPosition);
+
+                                if (startPosition == Vector3Int.one)
+                                {
+                                    startPosition = new Vector3Int(
+                                        PlayerPrefs.GetInt("cameraPositionX", 0),
+                                        PlayerPrefs.GetInt("cameraPositionY", 0),
+                                        PlayerPrefs.GetInt("cameraPositionZ", 0));
+                                }
+                                else
+                                {
+                                    PlayerPrefs.SetInt("cameraPositionX", startPosition.x);
+                                    PlayerPrefs.SetInt("cameraPositionY", startPosition.y);
+                                    PlayerPrefs.SetInt("cameraPositionZ", startPosition.z);
+                                }
+                                var user = new GameObject("[USER]").AddComponent<User>();
+                                var camera = CameraRegister(user.transform, startPosition);
+                                var userInput = new UserInput();
+                                userInput.Run(_container, user, camera);
+                                _container.RegisterInstance(userInput);
+                                user.Run(_container, camera);
+                                observer.OnNext(Unit.Default);
+                                observer.OnCompleted();
+
+                            });
+                    });
 
                 var population = new Population(new Pawn("Васек", new PawnLocation(Vector3Int.zero)));
                 var colony = new Colony(population);
                 _container.RegisterInstance(colony);
-                
-                return disposable;
+
+                return Disposable.Empty;
             });
         }
 
