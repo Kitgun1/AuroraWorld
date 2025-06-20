@@ -1,6 +1,5 @@
 using System;
 using AuroraWorld.Gameplay.World.Data;
-using AuroraWorld.Gameplay.World.Root;
 using UnityEngine;
 
 namespace AuroraWorld.Gameplay.World

@@ -1,4 +1,4 @@
-namespace AuroraWorld.Gameplay.World.Root
+namespace AuroraWorld.Gameplay.World.Data
 {
     public enum BiomeType
     {
