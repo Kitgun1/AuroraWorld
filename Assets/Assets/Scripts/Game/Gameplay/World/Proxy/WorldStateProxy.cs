@@ -31,15 +31,6 @@ namespace AuroraWorld.Gameplay.World
 
             Origin = origin;
             Seed = Origin.Seed;
-
-            container.RegisterInstance(this);
-            Geography.SetSeed(Seed);
-
-            Terrain = new Terrain(container);
-
-            _materialsResource = new Resource<Material>();
-            _parentMesh = container.Resolve<Transform>("ParentMeshTransform");
-
             Origin.Hexagons.ForEach(h =>
             {
                 var hexPoxy = new HexagonProxy(h);
