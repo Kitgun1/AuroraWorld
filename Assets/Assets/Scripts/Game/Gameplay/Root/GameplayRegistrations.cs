@@ -49,7 +49,7 @@ namespace AuroraWorld.Gameplay.Root
 
                         });
                         
-                        storage.Load($"{enterParams.WorldName}.WorldStateData", new WorldState() { Seed = "sandbox" })
+                        storage.Load($"{enterParams.WorldName}.WorldStateData", new WorldState() { Seed = "sandbox", WorldEntityState = new WorldEntityState()})
                             .Subscribe(worldState =>
                             {
                                 _worldStateProxy = new WorldStateProxy(_container, worldState, out var startPosition);

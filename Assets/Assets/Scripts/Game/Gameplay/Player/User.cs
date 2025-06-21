@@ -43,7 +43,7 @@ namespace AuroraWorld.Gameplay.Player
                     if (attachedHexagon != null)
                     {
                         attachedHexagon.WorldInfoProxy.Elevation.Value += changeValue;
-                        worldProxy.Terrain.AttachChunkMesh(ChunkUtils.CubeToChunk(hexagonPosition));
+                        worldProxy.Terrain.UpdateChunkMesh(ChunkUtils.CubeToChunk(hexagonPosition));
                     }
                 });
 
@@ -85,7 +85,7 @@ namespace AuroraWorld.Gameplay.Player
 
                     foreach (var modified in allModifiedChunks)
                     {
-                        worldProxy.Terrain.AttachChunkMesh(modified);
+                        worldProxy.Terrain.UpdateChunkMesh(modified);
                     }
                 });
 

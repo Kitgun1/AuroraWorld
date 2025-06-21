@@ -31,13 +31,13 @@ namespace AuroraWorld.Gameplay.World.Geometry
             return new Vector3Int(x, y, -x - y);
         }
 
-        public static Vector3 HexToWorld(this Vector2Int hex, float y = 0f)
+        public static Vector3 HexToWorld(this Vector2Int hex, int y = 0)
         {
             var offsetX = hex.y % 2 == 0 ? 0 : WIDTH;
             return new Vector3(hex.x * SIZE_X - offsetX, y / ELEVATION_MODIFER, hex.y * SIZE_Y * 0.75f);
         }
 
-        public static Vector3 CubeToWorld(this Vector3Int cube, float y = 0f) => cube.ToHex().HexToWorld(y);
+        public static Vector3 CubeToWorld(this Vector3Int cube, int y = 0) => cube.ToHex().HexToWorld(y);
 
         public static Vector2Int WorldToHex(this Vector3 world)
         {

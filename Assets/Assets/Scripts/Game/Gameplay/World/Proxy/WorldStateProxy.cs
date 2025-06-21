@@ -11,12 +11,13 @@ namespace AuroraWorld.Gameplay.World
     public class WorldStateProxy
     {
         public string Seed { get; }
-        public ObservableDictionary<Vector3Int, HexagonProxy> Hexagons { get; } = new();
+        public ObservableDictionary<Vector3Int, HexagonProxy> Hexagons { get; }
+        public WorldEntityStateProxy EntityStateProxy { get; }
+
+        public readonly WorldState Origin;
 
         public readonly Terrain Terrain;
         public readonly Dictionary<Vector3Int, ChunkMeshData> Chunks = new();
-
-        public readonly WorldState Origin;
 
         private readonly Resource<Material> _materialsResource;
         private readonly Transform _parentMesh;
@@ -24,13 +25,14 @@ namespace AuroraWorld.Gameplay.World
         public WorldStateProxy(DIContainer container, WorldState origin, out Vector3Int startPosition)
         {
             container.RegisterInstance(this);
-            Geography.SetSeed(Seed);
+            Geography.SetSeed(origin.Seed);
             Terrain = new Terrain(container);
             _materialsResource = new Resource<Material>();
             _parentMesh = container.Resolve<Transform>("ParentMeshTransform");
 
             Origin = origin;
             Seed = Origin.Seed;
+            Hexagons = new ObservableDictionary<Vector3Int, HexagonProxy>();
             Origin.Hexagons.ForEach(h =>
             {
                 var hexPoxy = new HexagonProxy(h);
@@ -39,6 +41,7 @@ namespace AuroraWorld.Gameplay.World
                 hexPoxy.WorldInfoProxy.FogOfWar.Skip(1).Subscribe(v => Terrain.FogOfWarModified(hexPoxy, v));
                 Hexagons.Add(h.Position, hexPoxy);
             });
+            EntityStateProxy = new WorldEntityStateProxy(Origin.WorldEntityState);
 
             Hexagons.ObserveAdd().Subscribe(e => Origin.Hexagons.Add(e.Value.Value.Origin));
             Hexagons.ObserveRemove().Subscribe(e => Origin.Hexagons.Remove(e.Value.Value.Origin));
@@ -94,10 +97,12 @@ namespace AuroraWorld.Gameplay.World
                     foreach (var modifiedChunk in modifiedChunks) chunkUpdated.Add(modifiedChunk);
                 }
             }
+            
+            EntityStateProxy.InstanceEntity(new RockEntity("Каменный валун", 100, new[] { startPosition }));
 
             foreach (var chunkPosition in chunkUpdated)
             {
-                Terrain.AttachChunkMesh(chunkPosition);
+                Terrain.UpdateChunkMesh(chunkPosition);
             }
 
             return startPosition;

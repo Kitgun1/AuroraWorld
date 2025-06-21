@@ -8,5 +8,6 @@ namespace AuroraWorld.Gameplay.World
     {
         public string Seed;
         public List<Hexagon> Hexagons = new();
+        public WorldEntityState WorldEntityState;
     }
 }
