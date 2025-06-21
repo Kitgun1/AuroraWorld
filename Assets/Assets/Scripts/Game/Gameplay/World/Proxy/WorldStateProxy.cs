@@ -23,6 +23,12 @@ namespace AuroraWorld.Gameplay.World
 
         public WorldStateProxy(DIContainer container, WorldState origin, out Vector3Int startPosition)
         {
+            container.RegisterInstance(this);
+            Geography.SetSeed(Seed);
+            Terrain = new Terrain(container);
+            _materialsResource = new Resource<Material>();
+            _parentMesh = container.Resolve<Transform>("ParentMeshTransform");
+
             Origin = origin;
             Seed = Origin.Seed;
 
@@ -46,30 +52,7 @@ namespace AuroraWorld.Gameplay.World
             Hexagons.ObserveAdd().Subscribe(e => Origin.Hexagons.Add(e.Value.Value.Origin));
             Hexagons.ObserveRemove().Subscribe(e => Origin.Hexagons.Remove(e.Value.Value.Origin));
 
-            var chunkUpdated = new HashSet<Vector3Int>();
-            if (Hexagons.Count > 0)
-            {
-                startPosition = Vector3Int.one;
-                foreach (var hexagonPair in Hexagons)
-                {
-                    chunkUpdated.Add(hexagonPair.Value.ChunkPosition);
-                }
-            }
-            else
-            {
-                startPosition = Terrain.FindLand();
-                var rangeVisible = CubeMath.Range(startPosition, 8);
-                foreach (var hexagonPosition in rangeVisible)
-                {
-                    Terrain.AttachHexagon(hexagonPosition, out var modifiedChunks, FogOfWarState.Visible);
-                    foreach (var modifiedChunk in modifiedChunks) chunkUpdated.Add(modifiedChunk);
-                }
-            }
-
-            foreach (var chunkPosition in chunkUpdated)
-            {
-                Terrain.AttachChunkMesh(chunkPosition);
-            }
+            startPosition = InitializeWorldView();
         }
 
         public void InstanceChunkObject(Vector3Int chunkPosition)
@@ -96,6 +79,37 @@ namespace AuroraWorld.Gameplay.World
             collider.sharedMesh = mesh;
 
             Chunks.Add(chunkPosition, new ChunkMeshData(filter, collider, renderer));
+        }
+
+        private Vector3Int InitializeWorldView()
+        {
+            Vector3Int startPosition;
+            var chunkUpdated = new HashSet<Vector3Int>();
+            if (Hexagons.Count > 0)
+            {
+                startPosition = Vector3Int.one;
+                foreach (var hexagonPair in Hexagons)
+                {
+                    chunkUpdated.Add(hexagonPair.Value.ChunkPosition);
+                }
+            }
+            else
+            {
+                startPosition = Terrain.FindLand();
+                var rangeVisible = CubeMath.Range(startPosition, 8);
+                foreach (var hexagonPosition in rangeVisible)
+                {
+                    Terrain.AttachHexagon(hexagonPosition, out var modifiedChunks, FogOfWarState.Visible);
+                    foreach (var modifiedChunk in modifiedChunks) chunkUpdated.Add(modifiedChunk);
+                }
+            }
+
+            foreach (var chunkPosition in chunkUpdated)
+            {
+                Terrain.AttachChunkMesh(chunkPosition);
+            }
+
+            return startPosition;
         }
 
         public struct ChunkMeshData
