@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using AuroraWorld.Gameplay.World.Geometry;
-using AuroraWorld.Gameplay.World.Data;
 using UnityEngine;
 using Random = System.Random;
 

@@ -1,5 +1,5 @@
 using System;
-using AuroraWorld.Gameplay.World.Data;
+using AuroraWorld.Gameplay.World;
 using UnityEngine;
 
 namespace Assets.Utils.Extensions
