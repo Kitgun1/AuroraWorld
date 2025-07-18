@@ -8,12 +8,18 @@ namespace AuroraWorld.App.Database
     public class WindowsStorageProvider : IStorageProvider
     {
         private const string FOLDER = "storages/";
+
+        private static readonly JsonSerializerSettings SerializerSettings = new JsonSerializerSettings()
+        {
+            TypeNameHandling = TypeNameHandling.All,
+            Formatting = Formatting.Indented
+        };
         
         public Observable<bool> Save<T>(string tag, T obj)
         {
             return Observable.Create<bool>(observer =>
             {
-                var json = JsonConvert.SerializeObject(obj, Formatting.Indented);
+                var json = JsonConvert.SerializeObject(obj, SerializerSettings);
                 var folderPath = Path.Combine(Application.persistentDataPath, $"{FOLDER}");
                 var filePath = Path.Combine(folderPath, $"{tag}.json");
                 if (!Directory.Exists(folderPath))
@@ -39,7 +45,7 @@ namespace AuroraWorld.App.Database
                 else
                 {
                     var json = File.ReadAllText(path);
-                    var loadedObj = JsonConvert.DeserializeObject<T>(json) ?? defaultObj;
+                    var loadedObj = JsonConvert.DeserializeObject<T>(json, SerializerSettings) ?? defaultObj;
                     observer.OnNext(loadedObj);
                 }
 

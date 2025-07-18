@@ -1,11 +1,16 @@
+using System.Linq;
 using AuroraWorld.App.Database;
 using AuroraWorld.Gameplay.GameColony;
 using AuroraWorld.Gameplay.GameplayTime;
 using AuroraWorld.Gameplay.Player;
+using AuroraWorld.Gameplay.World.Geometry;
 using AuroraWorld.Gameplay.World;
+using AuroraWorld.Gameplay.World.Proxy;
+using AuroraWorld.GameRoot.View;
 using DI;
 using R3;
 using UnityEngine;
+using UnityEngine.Rendering.Universal;
 using Time = AuroraWorld.Gameplay.GameplayTime.Time;
 
 namespace AuroraWorld.Gameplay.Root
@@ -19,8 +24,6 @@ namespace AuroraWorld.Gameplay.Root
         public static Observable<Unit> Register(DIContainer container, GameplayEnterParams enterParams)
         {
             _container = container;
-            var geoSettings = Resources.Load<GeoConfiguration>("Configurations/Geo/Geo Settings");
-            container.RegisterInstance(geoSettings);
             var storage = _container.Resolve<Storage>();
 
             var world = new GameObject("[WORLD]");
@@ -40,42 +43,35 @@ namespace AuroraWorld.Gameplay.Root
                         _timeProxy = new TimeProxy(_container, time);
                         _timeProxy.Hour.Skip(1).Subscribe(_ =>
                         {
-                            var canAutoSave = _timeProxy.Hours % 2 == 0;
-                            if(!canAutoSave) return;
+                            var canAutoSave = _timeProxy.Hours % 1 == 0;
+                            if (!canAutoSave) return;
                             Debug.Log("save..");
 
                             storage.Save($"{enterParams.WorldName}.GameTimeData", _timeProxy.Origin).Subscribe();
                             storage.Save($"{enterParams.WorldName}.WorldStateData", _worldStateProxy.Origin).Subscribe();
-
                         });
-                        
-                        storage.Load($"{enterParams.WorldName}.WorldStateData", new WorldState() { Seed = "sandbox", WorldEntityState = new WorldEntityState()})
+                        var defaultWorldState = new WorldState()
+                        {
+                            WorldSeed = enterParams.WorldSeed,
+                            WorldName = enterParams.WorldName,
+                            EntityState = new EntityState(),
+                            TerrainState = new TerrainState()
+                        };
+                        storage.Load($"{enterParams.WorldName}.WorldStateData", defaultWorldState)
                             .Subscribe(worldState =>
                             {
-                                _worldStateProxy = new WorldStateProxy(_container, worldState, out var startPosition);
+                                _worldStateProxy = new WorldStateProxy(_container, worldState);
 
-                                if (startPosition == Vector3Int.one)
-                                {
-                                    startPosition = new Vector3Int(
-                                        PlayerPrefs.GetInt("cameraPositionX", 0),
-                                        PlayerPrefs.GetInt("cameraPositionY", 0),
-                                        PlayerPrefs.GetInt("cameraPositionZ", 0));
-                                }
-                                else
-                                {
-                                    PlayerPrefs.SetInt("cameraPositionX", startPosition.x);
-                                    PlayerPrefs.SetInt("cameraPositionY", startPosition.y);
-                                    PlayerPrefs.SetInt("cameraPositionZ", startPosition.z);
-                                }
                                 var user = new GameObject("[USER]").AddComponent<User>();
-                                var camera = CameraRegister(user.transform, startPosition);
+                                var hexagon = _worldStateProxy.Origin.TerrainState.Hexagons.First();
+                                var hexagonElevation = hexagon.GeographyInfo.Elevation;
+                                var camera = CameraRegister(user.transform, hexagon.CubePosition.CubeToWorld(hexagonElevation));
                                 var userInput = new UserInput();
                                 userInput.Run(_container, user, camera);
                                 _container.RegisterInstance(userInput);
                                 user.Run(_container, camera);
                                 observer.OnNext(Unit.Default);
                                 observer.OnCompleted();
-
                             });
                     });
 
@@ -94,6 +90,9 @@ namespace AuroraWorld.Gameplay.Root
                 transform = { parent = rootObject }
             };
             var gameplayCamera = cameraObject.AddComponent<Camera>();
+            var uiSceneRootCamera = _container.Resolve<UIRootView>().UISceneCameraRoot;
+            gameplayCamera.GetUniversalAdditionalCameraData().cameraStack.Add(uiSceneRootCamera);
+            
             var cameraPosition = new Vector3(startPosition.x, 10, startPosition.z - 4);
             cameraObject.transform.position = cameraPosition;
             cameraObject.transform.rotation = Quaternion.LookRotation(startPosition - cameraPosition, Vector3.up);

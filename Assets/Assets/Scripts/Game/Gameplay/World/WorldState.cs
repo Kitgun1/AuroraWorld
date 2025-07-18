@@ -1,13 +1,13 @@
 using System;
-using System.Collections.Generic;
 
 namespace AuroraWorld.Gameplay.World
 {
     [Serializable]
     public class WorldState
     {
-        public string Seed;
-        public List<Hexagon> Hexagons = new();
-        public WorldEntityState WorldEntityState;
+        public string WorldName;
+        public string WorldSeed;
+        public TerrainState TerrainState;
+        public EntityState EntityState;
     }
 }

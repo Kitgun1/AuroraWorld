@@ -25,8 +25,10 @@ namespace AuroraWorld.GameRoot
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Init()
         {
+#if !UNITY_EDITOR
             Application.targetFrameRate = 60;
             Screen.sleepTimeout = SleepTimeout.NeverSleep;
+#endif
 
             _instance = new GameEntryPoint();
             _instance.RunGame();
@@ -57,7 +59,7 @@ namespace AuroraWorld.GameRoot
                     _coroutines.StartCoroutine(LoadAndStartLobby(lobbyEnterParams));
                     return;
                 case Scenes.GAMEPLAY:
-                    var gameplayEnterParams = new GameplayEnterParams("sandbox");
+                    var gameplayEnterParams = new GameplayEnterParams("sandbox", "sandbox");
                     _coroutines.StartCoroutine(LoadAndStartGameplay(gameplayEnterParams));
                     return;
             }
@@ -76,7 +78,7 @@ namespace AuroraWorld.GameRoot
             yield return LoadScene(Scenes.LOBBY);
             yield return null;
 
-            var sceneEntryPoint = Object.FindObjectOfType<LobbyEntryPoint>();
+            var sceneEntryPoint = Object.FindFirstObjectByType<LobbyEntryPoint>();
             var lobbyContainer = _cachedSceneContainer = new DIContainer(_rootContainer);
             sceneEntryPoint.Run(lobbyContainer, enterParams).Subscribe(lobbyExitParams =>
             {
@@ -107,7 +109,7 @@ namespace AuroraWorld.GameRoot
             yield return LoadScene(Scenes.GAMEPLAY);
             yield return null;
 
-            var sceneEntryPoint = Object.FindObjectOfType<GameplayEntryPoint>();
+            var sceneEntryPoint = Object.FindFirstObjectByType<GameplayEntryPoint>();
             var gameplayContainer = _cachedSceneContainer = new DIContainer(_rootContainer);
             sceneEntryPoint.Run(gameplayContainer, enterParams).Subscribe(gameplayExitParams =>
             {

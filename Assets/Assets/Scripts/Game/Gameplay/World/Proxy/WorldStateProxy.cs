@@ -1,125 +1,26 @@
-using System.Collections.Generic;
-using AuroraWorld.App.GameResources;
-using AuroraWorld.Gameplay.World.Geometry;
 using DI;
-using ObservableCollections;
 using R3;
-using UnityEngine;
 
-namespace AuroraWorld.Gameplay.World
+namespace AuroraWorld.Gameplay.World.Proxy
 {
     public class WorldStateProxy
     {
-        public string Seed { get; }
-        public ObservableDictionary<Vector3Int, HexagonProxy> Hexagons { get; }
-        public WorldEntityStateProxy EntityStateProxy { get; }
+        public readonly ReactiveProperty<string> WorldName;
+        public readonly string WorldSeed;
+        public readonly TerrainStateProxy TerrainState;
+        public readonly EntityStateProxy EntityState;
 
         public readonly WorldState Origin;
-
-        public readonly Terrain Terrain;
-        public readonly Dictionary<Vector3Int, ChunkMeshData> Chunks = new();
-
-        private readonly Resource<Material> _materialsResource;
-        private readonly Transform _parentMesh;
-
-        public WorldStateProxy(DIContainer container, WorldState origin, out Vector3Int startPosition)
+        
+        public WorldStateProxy(DIContainer container, WorldState origin)
         {
             container.RegisterInstance(this);
-            Geography.SetSeed(origin.Seed);
-            Terrain = new Terrain(container);
-            _materialsResource = new Resource<Material>();
-            _parentMesh = container.Resolve<Transform>("ParentMeshTransform");
-
             Origin = origin;
-            Seed = Origin.Seed;
-            Hexagons = new ObservableDictionary<Vector3Int, HexagonProxy>();
-            Origin.Hexagons.ForEach(h =>
-            {
-                var hexPoxy = new HexagonProxy(h);
-                hexPoxy.WorldInfoProxy.Elevation.Skip(1).Subscribe(v => Terrain.ElevationModified(hexPoxy, v));
-                hexPoxy.WorldInfoProxy.IsLand.Skip(1).Subscribe(v => Terrain.LandStateModified(hexPoxy, v));
-                hexPoxy.WorldInfoProxy.FogOfWar.Skip(1).Subscribe(v => Terrain.FogOfWarModified(hexPoxy, v));
-                Hexagons.Add(h.Position, hexPoxy);
-            });
-            EntityStateProxy = new WorldEntityStateProxy(Origin.WorldEntityState);
 
-            Hexagons.ObserveAdd().Subscribe(e => Origin.Hexagons.Add(e.Value.Value.Origin));
-            Hexagons.ObserveRemove().Subscribe(e => Origin.Hexagons.Remove(e.Value.Value.Origin));
-
-            startPosition = InitializeWorldView();
-        }
-
-        public void InstanceChunkObject(Vector3Int chunkPosition)
-        {
-            var chunk = new GameObject($"[CHUNK {chunkPosition}]")
-            {
-                transform =
-                {
-                    parent = _parentMesh.transform,
-                }
-            };
-            var filter = chunk.AddComponent<MeshFilter>();
-            var mesh = new Mesh
-            {
-                name = $"Chunk {chunkPosition}"
-            };
-            filter.mesh = mesh;
-            var renderer = chunk.AddComponent<MeshRenderer>();
-            var material = _materialsResource.Load("Materials/Hexagon Map Material");
-            material = new Material(material);
-            renderer.material = material;
-
-            var collider = chunk.AddComponent<MeshCollider>();
-            collider.sharedMesh = mesh;
-
-            Chunks.Add(chunkPosition, new ChunkMeshData(filter, collider, renderer));
-        }
-
-        private Vector3Int InitializeWorldView()
-        {
-            Vector3Int startPosition;
-            var chunkUpdated = new HashSet<Vector3Int>();
-            if (Hexagons.Count > 0)
-            {
-                startPosition = Vector3Int.one;
-                foreach (var hexagonPair in Hexagons)
-                {
-                    chunkUpdated.Add(hexagonPair.Value.ChunkPosition);
-                }
-            }
-            else
-            {
-                startPosition = Terrain.FindLand();
-                var rangeVisible = CubeMath.Range(startPosition, 8);
-                foreach (var hexagonPosition in rangeVisible)
-                {
-                    Terrain.AttachHexagon(hexagonPosition, out var modifiedChunks, FogOfWarState.Visible);
-                    foreach (var modifiedChunk in modifiedChunks) chunkUpdated.Add(modifiedChunk);
-                }
-            }
-            
-            EntityStateProxy.InstanceEntity(new RockEntity("Каменный валун", 100, new[] { startPosition }));
-
-            foreach (var chunkPosition in chunkUpdated)
-            {
-                Terrain.UpdateChunkMesh(chunkPosition);
-            }
-
-            return startPosition;
-        }
-
-        public struct ChunkMeshData
-        {
-            public readonly MeshFilter Filter;
-            public readonly MeshRenderer Renderer;
-            public readonly MeshCollider Collider;
-
-            public ChunkMeshData(MeshFilter filter, MeshCollider collider, MeshRenderer renderer)
-            {
-                Filter = filter;
-                Renderer = renderer;
-                Collider = collider;
-            }
+            WorldName = new ReactiveProperty<string>(Origin.WorldName);
+            WorldSeed = Origin.WorldSeed;
+            TerrainState = new TerrainStateProxy(container, Origin.TerrainState, WorldSeed);
+            EntityState = new EntityStateProxy(Origin.EntityState);
         }
     }
 }

@@ -1,5 +1,4 @@
 using System.Threading.Tasks;
-using AuroraWorld.Gameplay.World;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -10,7 +9,7 @@ namespace Assets.Scripts.Test
         [SerializeField] private string _seed;
         [SerializeField] private int _quality;
 
-        [SerializeField] private GeoConfiguration _configuration;
+        //[SerializeField] private GeoConfiguration _configuration;
 
         private Texture2D _texture;
         private Image _image;
@@ -26,7 +25,7 @@ namespace Assets.Scripts.Test
         {
             if (Input.GetMouseButtonUp(0))
             {
-                Geography.SetSeed(_seed);
+                //Geography.SetSeed(_seed);
                 _width = 1920 / _quality;
                 _height = 1080 / _quality;
                 _texture = new Texture2D(_width, _height);
@@ -62,19 +61,20 @@ namespace Assets.Scripts.Test
             _texture.filterMode = FilterMode.Point;
             _texture.Apply();
         }
-        
+
         private Color32 GetColor(Vector2Int axial)
         {
-            Color32 color;
-            
-            var elevation = _configuration.GetElevation(axial);
+            Color32 color = new Color32(255, 255, 255, 255);
+
+            /*var elevation = _configuration.GetElevation(axial);
             var isLand = _configuration.LandMinElevation <= elevation;
             var humidity = _configuration.GetHumidity(axial);
             var temperature = _configuration.GetTemperature(axial);
-            
+
             if (isLand)
                 color = new Color32(0, 155, 0, 255);
             else color = new Color32(28, 169, 201, 255);
+            */
 
             return color;
         }

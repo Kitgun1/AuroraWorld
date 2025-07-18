@@ -1,13 +1,14 @@
 using System.Collections.Generic;
 using System.Linq;
-using AuroraWorld.Gameplay.World;
 using AuroraWorld.Gameplay.World.Geometry;
+using AuroraWorld.Gameplay.World.Proxy;
+using AuroraWorld.Gameplay.World.Terrain.Proxy;
 
-namespace Assets.Scripts.Utils
+namespace AuroraWorld.Utils
 {
     public static class HexagonGroupUtils
     {
-        public static List<List<HexagonProxy>> GroupByConnected(IEnumerable<HexagonProxy> hexagons, Terrain terrain)
+        public static List<List<HexagonProxy>> GroupByConnected(IEnumerable<HexagonProxy> hexagons, TerrainStateProxy terrain)
         {
             var allHexagons = new HashSet<HexagonProxy>(hexagons);
             var visited = new HashSet<HexagonProxy>();
@@ -27,8 +28,8 @@ namespace Assets.Scripts.Utils
                         var current = queue.Dequeue();
                         group.Add(current);
 
-                        var neighbors = current.Position.Neighbors()
-                            .Select(i => terrain.ContainsHexagon(i) ? terrain.AttachHexagon(i, out _) : null)
+                        var neighbors = current.CubePosition.Neighbors()
+                            .Select(terrain.LoadHexagon)
                             .Where(i => i != null)
                             .ToArray();
                         foreach (var neighbor in neighbors)

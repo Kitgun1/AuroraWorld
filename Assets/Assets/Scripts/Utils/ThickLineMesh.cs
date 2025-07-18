@@ -1,7 +1,8 @@
 using System.Collections.Generic;
 using System.Linq;
-using AuroraWorld.Gameplay.World;
 using AuroraWorld.Gameplay.World.Geometry;
+using AuroraWorld.Gameplay.World.Proxy;
+using AuroraWorld.Gameplay.World.Terrain.Proxy;
 using UnityEngine;
 
 namespace Assets.Utils.Coroutine
@@ -13,32 +14,32 @@ namespace Assets.Utils.Coroutine
         public Mesh Mesh { get; private set; }
         public HexagonProxy[] SelectedHexagons { get; private set; } = { };
 
-        public void AttachMesh(HexagonProxy[] selectedHexes)
+        public void AttachMesh(HexagonProxy[] selectedHexes, TerrainStateProxy terrain)
         {
             SelectedHexagons = selectedHexes;
-            _lines = GeneratePath(selectedHexes);
+            _lines = GeneratePath(selectedHexes, terrain);
             Mesh = GenerateMesh();
         }
 
-        private (Edge inner, Edge center, Edge outer)?[][] GeneratePath(HexagonProxy[] selectedHexes)
+        private static (Edge inner, Edge center, Edge outer)?[][] GeneratePath(
+            HexagonProxy[] selectedHexes, TerrainStateProxy terrain)
         {
-            selectedHexes = selectedHexes.GroupBy(h => h.Position).Select(g => g.First()).ToArray();
+            selectedHexes = selectedHexes.GroupBy(h => h.CubePosition).Select(g => g.First()).ToArray();
 
             var resultEdges = new List<(Edge inner, Edge center, Edge outer)?>();
             var lines = new List<(Edge inner, Edge center, Edge outer)?[]>();
 
-            foreach (var entityProxy in selectedHexes)
+            foreach (var hexagonProxy in selectedHexes)
             {
-                var edges = entityProxy.HexMesh.Edges;
+                var hexagonMesh = hexagonProxy.CalculateMeshData(terrain);
+                if(hexagonMesh == null) continue;
+                var edges = hexagonMesh.Edges;
                 for (var i = 0; i < edges.Length; i++)
                 {
                     var edge = edges[i];
                     var neighborPosition = edge.CubePosition.Neighbor(edge.Direction);
-                    if (selectedHexes.Any(e => e.Position == neighborPosition)) continue;
-                    resultEdges.Add(
-                        (entityProxy.HexMesh.InnerEdges[i],
-                            entityProxy.HexMesh.Edges[i],
-                            entityProxy.HexMesh.OuterEdges[i]));
+                    if (selectedHexes.Any(e => e.CubePosition == neighborPosition)) continue;
+                    resultEdges.Add((hexagonMesh.InnerEdges[i], hexagonMesh.Edges[i], hexagonMesh.OuterEdges[i]));
                 }
             }
 

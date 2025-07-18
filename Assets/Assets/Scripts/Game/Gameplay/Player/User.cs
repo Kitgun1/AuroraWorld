@@ -1,7 +1,7 @@
-using System.Collections.Generic;
 using System.Linq;
-using AuroraWorld.Gameplay.World;
 using AuroraWorld.Gameplay.World.Geometry;
+using AuroraWorld.Gameplay.World.Proxy;
+using AuroraWorld.Gameplay.World.Terrain;
 using DI;
 using R3;
 using UnityEngine;
@@ -24,69 +24,53 @@ namespace AuroraWorld.Gameplay.Player
             _container = container;
 
             var selectionSettings = _userSettings.SelectionSettings;
-            var terrain = _container.Resolve<WorldStateProxy>().Terrain;
+            var worldStateProxy = _container.Resolve<WorldStateProxy>();
+            var terrain = worldStateProxy.TerrainState;
 
             // Изменение ландшафта на ПКМ и ЛКМ
-            _input.ClickUpPosition.Skip(1)
+            _input.MouseClickUp.Skip(1)
                 .Where(data => !data.Modifiers.Any && !data.IsPointerOverUI)
                 .Subscribe(data =>
                 {
                     var hexagonPosition = data.WorldPosition.WorldToHex().ToCube();
-                    var worldProxy = container.Resolve<WorldStateProxy>();
-                    var changeValue = data.MouseButton switch
-                    {
-                        0 => 1,
-                        1 => -1,
-                        _ => 0
-                    };
-                    var attachedHexagon = worldProxy.Hexagons.GetValueOrDefault(hexagonPosition);
-                    if (attachedHexagon != null)
-                    {
-                        attachedHexagon.WorldInfoProxy.Elevation.Value += changeValue;
-                        worldProxy.Terrain.UpdateChunkMesh(ChunkUtils.CubeToChunk(hexagonPosition));
-                    }
+                    if (!terrain.ContainsLoadedHexagon(hexagonPosition)) return;
+                    var changeValue = data.MouseButton switch { 0 => 1, 1 => -1, _ => 0 };
+                    var attachedHexagon = terrain.LoadHexagon(hexagonPosition);
+                    attachedHexagon.GeographyInfo.Elevation.Value += changeValue;
+
+                    terrain.UpdateDirtyHexagons();
                 });
 
             // Выделение гексов на СКМ
-            _input.ClickUpPosition.Skip(1)
+            _input.MouseClickUp.Skip(1)
                 .Where(data => !data.Modifiers.Any && data is { MouseButton: 2, IsPointerOverUI: false })
                 .Subscribe(data =>
                 {
                     // selection
                     var hexagonPosition = data.WorldPosition.WorldToHex().ToCube();
-                    var worldProxy = container.Resolve<WorldStateProxy>();
                     var positionsInRange = CubeMath.Range(hexagonPosition, selectionSettings.Range.Value);
-                    var hexagons = positionsInRange
-                        .Select(p => worldProxy.Hexagons.GetValueOrDefault(p))
-                        .Where(h => h != null)
-                        .ToArray();
-                    _mapSelections.AttachSelection("selected", selectionSettings, worldProxy.Terrain, hexagons);
+                    var hexagonProxies = positionsInRange.Select(terrain.LoadHexagon).ToArray();
+                    _mapSelections.AttachSelection("selected", selectionSettings, terrain, hexagonProxies);
                 });
 
             // Редактирование тумана войны
-            _input.ClickUpPosition.Skip(1)
+            _input.MouseClickUp.Skip(1)
                 .Where(data => data.Modifiers.OnlyShift && !data.IsPointerOverUI)
                 .Subscribe(data =>
                 {
                     var hexagonPosition = data.WorldPosition.WorldToCube();
-                    var worldProxy = container.Resolve<WorldStateProxy>();
                     var range = CubeMath.Range(hexagonPosition, selectionSettings.Range.Value);
-
-                    HashSet<Vector3Int> allModifiedChunks = new();
+                    var targetFogOfState = (FogOfWarState)data.MouseButton;
                     foreach (var cube in range)
                     {
-                        var fogState = (FogOfWarState)(data.MouseButton + 1);
-                        worldProxy.Terrain.AttachHexagon(cube, out var modifiedChunks, fogState);
-                        foreach (var chunk in modifiedChunks)
+                        var hexagon = terrain.LoadHexagon(cube);
+                        hexagon.FogOfWarState.Value = targetFogOfState;
+                        if (!terrain.ContainsLoadedHexagon(cube))
                         {
-                            allModifiedChunks.Add(chunk);
+                            terrain.AddHexagon(hexagon);
                         }
                     }
-
-                    foreach (var modified in allModifiedChunks)
-                    {
-                        worldProxy.Terrain.UpdateChunkMesh(modified);
-                    }
+                    terrain.UpdateDirtyHexagons();
                 });
 
             // Движение камеры
@@ -95,14 +79,14 @@ namespace AuroraWorld.Gameplay.Player
                 var speed = data.Modifiers.OnlyShift
                     ? _userSettings.CameraSettings.FastMoveSpeed.Value
                     : _userSettings.CameraSettings.MoveSpeed.Value;
-                
+
                 var cameraPosition = currentCamera.transform.position;
-                float elevation = terrain.GetHexagonInfo(cameraPosition.WorldToCube()).Elevation;
+                float elevation = terrain.LoadHexagon(cameraPosition.WorldToCube()).GeographyInfo.Elevation.Value;
                 elevation /= GeometryHexagon.ELEVATION_MODIFER;
                 var delta = new Vector3(data.Vector.x, 0, data.Vector.y) * speed;
 
                 var minElevation = elevation + 4;
-                var maxElevation = elevation + 32;
+                var maxElevation = elevation + 24;
                 var clampedElevation = Mathf.Clamp(cameraPosition.y, minElevation, maxElevation);
                 currentCamera.transform.position = new Vector3(cameraPosition.x, clampedElevation, cameraPosition.z);
                 currentCamera.transform.position += delta;
@@ -110,9 +94,9 @@ namespace AuroraWorld.Gameplay.Player
             _input.MouseScroll.Skip(1).Where(data => !data.IsPointerOverUI).Subscribe(data =>
             {
                 var cameraPosition = currentCamera.transform.position;
-                float elevation = terrain.GetHexagonInfo(cameraPosition.WorldToCube()).Elevation;
+                float elevation = terrain.LoadHexagon(cameraPosition.WorldToCube()).GeographyInfo.Elevation.Value;
                 elevation /= GeometryHexagon.ELEVATION_MODIFER;
-                if (elevation + 4 > cameraPosition.y - data.Delta || cameraPosition.y - data.Delta > 32) return;
+                if (elevation + 4 > cameraPosition.y - data.Delta || cameraPosition.y - data.Delta > 24) return;
                 currentCamera.transform.position += Vector3.down * data.Delta;
             });
         }

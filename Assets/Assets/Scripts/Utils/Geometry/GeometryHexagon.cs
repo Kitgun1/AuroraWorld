@@ -1,5 +1,9 @@
 using System.Collections.Generic;
 using System.Linq;
+using AuroraWorld.Gameplay.World.Proxy;
+using AuroraWorld.Gameplay.World.Terrain;
+using AuroraWorld.Gameplay.World.Terrain.Proxy;
+using AuroraWorld.Utils;
 using UnityEngine;
 using static UnityEngine.Mathf;
 using Vector3 = UnityEngine.Vector3;
@@ -53,7 +57,7 @@ namespace AuroraWorld.Gameplay.World.Geometry
 
         #region Geometry
 
-        public static void CalculateEdges(HexagonMesh hexagonMesh, Vector3Int cube, Terrain terrain)
+        public static void CalculateEdges(HexagonMesh hexagonMesh, Vector3Int cube, TerrainStateProxy terrain)
         {
             // Грани
             hexagonMesh.InnerEdges = new Edge[6];
@@ -64,7 +68,7 @@ namespace AuroraWorld.Gameplay.World.Geometry
             {
                 var direction = (DirectionType)(i - 1);
                 var neighborPosition = cube.Neighbor(direction);
-                var neighborElevation = terrain.GetHexagonInfo(neighborPosition).Elevation;
+                var neighborElevation = terrain.LoadHexagon(neighborPosition).GeographyInfo.Elevation.Value;
                 var neighborVertices = GetVertices(neighborPosition.CubeToWorld(neighborElevation));
 
                 // Внутренняя грань
@@ -123,7 +127,7 @@ namespace AuroraWorld.Gameplay.World.Geometry
 
         #endregion
 
-        public static HexagonMesh InstanceUpSideMesh(Vector3Int cube, HexagonWorldInfoProxy info)
+        public static HexagonMesh CalculateUpSideMesh(Vector3Int cube, GeographyInfoProxy info)
         {
             var hexMesh = new HexagonMesh();
             var worldCenter = cube.CubeToWorld(info.Elevation.Value);
@@ -138,14 +142,14 @@ namespace AuroraWorld.Gameplay.World.Geometry
             // Треугольники и цвета лицевой стороны
             hexMesh.Triangles = new int[18];
             hexMesh.Colors = new Color32[vertexes.Length];
-            hexMesh.Colors[0] = info.GetBiomeColor(cube);
+            hexMesh.Colors[0] = info.TerrainBiome.Value.ToColor();
             for (var i = 0; i < 6; i++)
             {
                 hexMesh.Triangles[i * 3 + 0] = i + 2 > 6 ? 1 : i + 2;
                 hexMesh.Triangles[i * 3 + 1] = i + 1;
                 hexMesh.Triangles[i * 3 + 2] = 0;
 
-                hexMesh.Colors[i + 1] = info.GetBiomeColor(cube);
+                hexMesh.Colors[i + 1] = hexMesh.Colors[0];
             }
 
             return hexMesh;
@@ -159,7 +163,7 @@ namespace AuroraWorld.Gameplay.World.Geometry
             }
         }
 
-        public static void InstanceBorders(Vector3Int position, HexagonMesh mesh, Terrain terrain)
+        public static HexagonMesh CalculateBordersMesh(Vector3Int position, HexagonMesh mesh, TerrainStateProxy terrain)
         {
             var baseColor = mesh.Colors[0];
             var addedVertices = new List<Vector3>();
@@ -173,14 +177,12 @@ namespace AuroraWorld.Gameplay.World.Geometry
                 var lastVertexIndex = mesh.Vertices.Length + addedVertices.Count;
                 var innerEdge = mesh.InnerEdges[i];
                 var outerEdge = mesh.OuterEdges[i];
-                
+
                 var neighborPosition = position.Neighbor(innerEdge.Direction);
-                var neighborInfo = terrain.GetHexagonInfo(neighborPosition);
-                
-                if (neighborInfo.FogOfWarState == FogOfWarState.Hidden)
-                {
-                    continue;
-                }
+                var neighborHexagon = terrain.LoadHexagon(neighborPosition);
+
+                if(!terrain.ContainsLoadedHexagon(neighborPosition)) continue;
+                if (neighborHexagon.FogOfWarState.Value == FogOfWarState.Hide) continue;
 
                 addedVertices.Add(innerEdge.P1);
                 addedVertices.Add(innerEdge.P2);
@@ -189,8 +191,8 @@ namespace AuroraWorld.Gameplay.World.Geometry
 
                 addedUVs2.AddRange(new[] { Vector2.zero, Vector2.zero, Vector2.zero, Vector2.zero });
 
-                var neighborVertexColor = new HexagonWorldInfoProxy(neighborInfo).GetBiomeColor(neighborPosition);
-                var neighborHidden = neighborInfo.FogOfWarState == FogOfWarState.Hidden;
+                var neighborVertexColor = neighborHexagon.GeographyInfo.TerrainBiome.Value.ToColor();
+                var neighborHidden = neighborHexagon.FogOfWarState.Value == FogOfWarState.Hide;
                 var selfHidden = baseColor.a == 0;
                 var selfColor = neighborHidden ? neighborVertexColor : baseColor;
                 var neighborColor = selfHidden ? baseColor : neighborVertexColor;
@@ -212,18 +214,16 @@ namespace AuroraWorld.Gameplay.World.Geometry
                 var beforeOuterEdge = mesh.OuterEdges[i == 0 ? 5 : i - 1];
 
                 var neighbor1Position = position.Neighbor(outerEdge.Direction);
-                var neighbor1Info = terrain.GetHexagonInfo(neighbor1Position);
-                var neighbor1InfoProxy = new HexagonWorldInfoProxy(neighbor1Info);
-                
+                var neighbor1Hexagon = terrain.LoadHexagon(neighbor1Position);
+
+                if(!terrain.ContainsLoadedHexagon(neighbor1Position)) continue;
+                if (neighbor1Hexagon.FogOfWarState.Value == FogOfWarState.Hide) continue;
+
                 var neighbor2Position = position.Neighbor(beforeOuterEdge.Direction);
-                var neighbor2Info = terrain.GetHexagonInfo(neighbor2Position);
-                var neighbor2InfoProxy = new HexagonWorldInfoProxy(neighbor2Info);
-                
-                if (neighbor1Info.FogOfWarState == FogOfWarState.Hidden ||
-                    neighbor2Info.FogOfWarState == FogOfWarState.Hidden)
-                {
-                    continue;
-                }
+                var neighbor2Hexagon = terrain.LoadHexagon(neighbor2Position);
+
+                if(!terrain.ContainsLoadedHexagon(neighbor2Position)) continue;
+                if (neighbor2Hexagon.FogOfWarState.Value == FogOfWarState.Hide) continue;
 
                 addedVertices.Add(innerEdge.P1);
                 addedVertices.Add(outerEdge.P1);
@@ -231,13 +231,13 @@ namespace AuroraWorld.Gameplay.World.Geometry
 
                 addedUVs2.AddRange(new[] { Vector2.zero, Vector2.zero, Vector2.zero });
 
-                var neighbor1VertexColor = neighbor1InfoProxy.GetBiomeColor(neighbor1Position);
-                var neighbor1Hidden = neighbor1Info.FogOfWarState == FogOfWarState.Hidden;
+                var neighbor1VertexColor = neighbor1Hexagon.GeographyInfo.TerrainBiome.Value.ToColor();
+                var neighbor1Hidden = neighbor1Hexagon.FogOfWarState.Value == FogOfWarState.Hide;
 
-                var neighbor2VertexColor = neighbor2InfoProxy.GetBiomeColor(neighbor2Position);
-                var neighbor2Hidden = neighbor2Info.FogOfWarState == FogOfWarState.Hidden;
+                var neighbor2VertexColor = neighbor2Hexagon.GeographyInfo.TerrainBiome.Value.ToColor();
+                var neighbor2Hidden = neighbor2Hexagon.FogOfWarState.Value == FogOfWarState.Hide;
 
-                var selfHidden = baseColor.a == 0;
+                /*var selfHidden = baseColor.a == 0;
                 var selfColor = neighbor1Hidden
                     ? neighbor1VertexColor
                     : neighbor2Hidden
@@ -252,16 +252,16 @@ namespace AuroraWorld.Gameplay.World.Geometry
                     ? baseColor
                     : neighbor1Hidden
                         ? neighbor1VertexColor
-                        : neighbor2VertexColor;
+                        : neighbor2VertexColor;*/
 
-                addedColors.Add(selfColor);
-                addedColors.Add(neighbor1Color);
-                addedColors.Add(neighbor2Color);
+                addedColors.Add(baseColor);
+                addedColors.Add(neighbor1VertexColor);
+                addedColors.Add(neighbor2VertexColor);
 
                 addedTriangles.AddRange(new[] { lastVertexIndex, lastVertexIndex + 1, lastVertexIndex + 2 });
             }
 
-            if (addedVertices.Count == 0) return;
+            //if (addedVertices.Count == 0) return mesh;
 
             var vertices = mesh.Vertices.ToList();
             vertices.AddRange(addedVertices);
@@ -278,6 +278,8 @@ namespace AuroraWorld.Gameplay.World.Geometry
             var triangles = mesh.Triangles.ToList();
             triangles.AddRange(addedTriangles);
             mesh.Triangles = triangles.ToArray();
+
+            return mesh;
         }
     }
 }

@@ -16,7 +16,7 @@ namespace AuroraWorld.Gameplay.GameplayTime
 
         public Sun()
         {
-            _sunObject = Object.FindObjectsOfType<Light>().First(l => l.type == LightType.Directional);
+            _sunObject = Object.FindObjectsByType<Light>(FindObjectsInactive.Exclude, FindObjectsSortMode.InstanceID).First(l => l.type == LightType.Directional);
             _offsetQuaternion = _sunObject.transform.rotation;
             _curve = new Resource<Curve>().Load("Configurations/Curves/SunCurve");
         }

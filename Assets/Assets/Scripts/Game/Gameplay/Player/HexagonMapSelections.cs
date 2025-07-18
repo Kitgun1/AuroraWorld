@@ -1,13 +1,13 @@
 using System.Collections.Generic;
 using System.Linq;
-using Assets.Scripts.Utils;
+using AuroraWorld.Utils;
 using Assets.Utils.Coroutine;
 using AuroraWorld.App.GameResources;
 using AuroraWorld.Gameplay.Player.Proxy;
-using AuroraWorld.Gameplay.World;
 using AuroraWorld.Gameplay.World.Geometry;
+using AuroraWorld.Gameplay.World.Proxy;
+using AuroraWorld.Gameplay.World.Terrain.Proxy;
 using UnityEngine;
-using Terrain = AuroraWorld.Gameplay.World.Terrain;
 
 namespace AuroraWorld.Gameplay.Player
 {
@@ -16,7 +16,7 @@ namespace AuroraWorld.Gameplay.Player
         private readonly Dictionary<string, Selection> _selections = new();
         private readonly Resource<Material> _selectionMaterialsResource = new();
 
-        public void AttachSelection(string tag, SelectionSettingsProxy settings, Terrain terrain, params HexagonProxy[] hexagons)
+        public void AttachSelection(string tag, SelectionSettingsProxy settings, TerrainStateProxy terrain, params HexagonProxy[] hexagons)
         {
             var selection = SelectionMeshLoadOrCreate(tag);
             _selections.TryAdd(tag, selection);
@@ -31,10 +31,10 @@ namespace AuroraWorld.Gameplay.Player
                 }
 
                 var intersections = CubeMath.IntersectingRanges(
-                    hexagons.Select(h => h.Position).ToArray(),
-                    selected.Select(h => h.Position).ToArray()
+                    hexagons.Select(h => h.CubePosition).ToArray(),
+                    selected.Select(h => h.CubePosition).ToArray()
                 );
-                var resultSelected = selected.Where(s => intersections.Any(i => i == s.Position)).ToArray();
+                var resultSelected = selected.Where(s => intersections.Any(i => i == s.CubePosition)).ToArray();
                 if (settings.OnlyNeighbor.Value)
                 {
                     var groupCount = HexagonGroupUtils.GroupByConnected(resultSelected, terrain).Count;
@@ -44,11 +44,11 @@ namespace AuroraWorld.Gameplay.Player
                         return;
                     }
 
-                    if (groupCount == 1) selection.ThickLineMesh.AttachMesh(resultSelected);
+                    if (groupCount == 1) selection.ThickLineMesh.AttachMesh(resultSelected,terrain);
                 }
                 else
                 {
-                    selection.ThickLineMesh.AttachMesh(resultSelected);
+                    selection.ThickLineMesh.AttachMesh(resultSelected,terrain);
                 }
             }
             else
@@ -59,9 +59,9 @@ namespace AuroraWorld.Gameplay.Player
 
                     foreach (var group in connectedGroups)
                     {
-                        if (group.Any(h => h.Position.Neighbors()
-                                .Select(i => terrain.ContainsHexagon(i) ? terrain.AttachHexagon(i, out _) : null)
-                                .Any(h1 => selected.Any(s => s.Position == h1?.Position))))
+                        if (group.Any(h => h.CubePosition.Neighbors()
+                                .Select(terrain.LoadHexagon)
+                                .Any(h1 => selected.Any(s => s.CubePosition == h1.CubePosition))))
                         {
                             selected.AddRange(group);
                         }
@@ -72,7 +72,7 @@ namespace AuroraWorld.Gameplay.Player
                     selected.AddRange(hexagons);
                 }
 
-                selection.ThickLineMesh.AttachMesh(selected.ToArray());
+                selection.ThickLineMesh.AttachMesh(selected.ToArray(),terrain);
             }
 
             selection.Filter.mesh = selection.ThickLineMesh.Mesh;

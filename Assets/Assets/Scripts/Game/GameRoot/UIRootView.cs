@@ -6,6 +6,9 @@ namespace AuroraWorld.GameRoot.View
     {
         [SerializeField] private GameObject _loadingScreen;
         [SerializeField] private Transform _uiSceneContainer;
+        [SerializeField] private Camera _uiSceneCameraRoot;
+        
+        public Camera UISceneCameraRoot => _uiSceneCameraRoot;
 
         private void Awake() => HideLoadingScreen();
 

@@ -23,7 +23,7 @@ namespace AuroraWorld.Gameplay.GameplayTime
 
         private readonly Sun _sun;
 
-        public const int TICK_IN_HOUR = 100;
+        public const int TICK_IN_HOUR = 1200; // 1 час - 60 секунд
         public const int HOUR_IN_DAY = 24;
         public const int DAY_IN_QUART = 24;
         public const int QUART_IN_YEAR = 4;
@@ -40,7 +40,8 @@ namespace AuroraWorld.Gameplay.GameplayTime
             Quart = new ReactiveProperty<int>(Origin.Quart);
             Year = new ReactiveProperty<int>(Origin.Year);
 
-            Observable.Interval(TimeSpan.FromMilliseconds(200))
+            // 20 тиков в секунду
+            Observable.Interval(TimeSpan.FromMilliseconds(50))
                 .Subscribe(_ => Tick.Value = (Tick.Value + 1) % TICK_IN_HOUR)
                 .AddTo(container.Resolve<Transform>("ParentMeshTransform"));
 
