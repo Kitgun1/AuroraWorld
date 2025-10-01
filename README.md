@@ -43,3 +43,45 @@ flowchart LR
     AppEP --> MainMenuEP --> GameplayEP
     GameplayEP --> MainMenuEP
 ```
+
+# Генерация мира:
+
+## Демонстрация генерации мира
+Для генерации используются Job система + многопоточность
+![terrain_demo.gif](imgs/terrain_demo.gif)
+
+## Возможности
+### Grid
+![grid.gif](imgs/grid.gif)
+
+### Line
+![line.jpg](imgs/line.jpg)
+
+### Neighbors
+![neighbors.jpg](imgs/neighbors.jpg)
+
+### Область (Обычная)
+![gif](imgs/range.gif)
+
+### Область (Спиральная)
+![gif](imgs/range_spiral.gif)
+
+### Пересечение областей
+![gif](imgs/intersection_range.gif)
+
+### Поворот на 60* относительно центра
+![gif](imgs/rotate.gif)
+
+### Кольцо
+![gif](imgs/ring.gif)
+
+### Визуализация чанков
+![jpg](imgs/chunks.jpg)
+
+
+
+
+
+
+
+
